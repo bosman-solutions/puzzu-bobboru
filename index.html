@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Puzzu-Bobboru 🫧</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;900&display=swap');
+
+    :root {
+      --bg:        #0d0d1a;
+      --panel:     #13132b;
+      --accent:    #ff6bcb;
+      --accent2:   #6bf8ff;
+      --accent3:   #ffe66b;
+      --text:      #f0eeff;
+      --shadow:    rgba(255,107,203,0.4);
+      --glow2:     rgba(107,248,255,0.4);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Nunito', sans-serif;
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,0.7) 0%, transparent 100%),
+        radial-gradient(1px 1px at 70% 80%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 85% 35%, rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 20% 90%, rgba(255,255,255,0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 90% 55%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(2px 2px at 45% 45%, rgba(107,248,255,0.4) 0%, transparent 100%),
+        radial-gradient(2px 2px at 75% 15%, rgba(255,107,203,0.4) 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    h1 {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(10px, 2.5vw, 18px);
+      color: var(--accent);
+      text-shadow: 0 0 20px var(--shadow), 0 0 40px var(--shadow);
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      z-index: 1;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      color: var(--accent2);
+      margin-bottom: 12px;
+      opacity: 0.8;
+      z-index: 1;
+      font-style: italic;
+    }
+
+    .game-wrap {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .side-panel {
+      width: 110px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .panel-box {
+      background: var(--panel);
+      border: 1px solid rgba(107,248,255,0.2);
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+      box-shadow: 0 0 12px var(--glow2);
+    }
+
+    .panel-box .label {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 7px;
+      color: var(--accent2);
+      margin-bottom: 6px;
+      letter-spacing: 1px;
+    }
+
+    .panel-box .value {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 14px;
+      color: var(--accent3);
+      text-shadow: 0 0 10px rgba(255,230,107,0.6);
+    }
+
+    .next-bubble-canvas {
+      display: block;
+      margin: 0 auto;
+    }
+
+    canvas#game {
+      display: block;
+      border-radius: 12px;
+      border: 2px solid rgba(255,107,203,0.3);
+      box-shadow:
+        0 0 30px var(--shadow),
+        0 0 60px rgba(255,107,203,0.1),
+        inset 0 0 30px rgba(0,0,0,0.5);
+      cursor: crosshair;
+    }
+
+    .btn {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: all 0.15s;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #c84fa0);
+      color: white;
+      box-shadow: 0 0 15px var(--shadow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 25px var(--shadow);
+    }
+
+    .btn-secondary {
+      background: var(--panel);
+      color: var(--accent2);
+      border: 1px solid var(--accent2);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(107,248,255,0.1);
+    }
+
+    #message {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 9px;
+      color: var(--accent3);
+      text-align: center;
+      min-height: 20px;
+      text-shadow: 0 0 10px rgba(255,230,107,0.6);
+      z-index: 1;
+      margin-top: 8px;
+      letter-spacing: 1px;
+    }
+
+    #overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(13,13,26,0.88);
+      border-radius: 12px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 10;
+    }
+
+    #overlay.show { display: flex; }
+
+    #overlay-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(12px, 3vw, 22px);
+      color: var(--accent);
+      text-shadow: 0 0 20px var(--shadow);
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    #overlay-sub {
+      font-size: 13px;
+      color: var(--accent2);
+      text-align: center;
+    }
+
+    .canvas-wrap {
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🫧 PUZZU-BOBBORU</h1>
+<p class="subtitle">made with love ♥</p>
+
+<div class="game-wrap">
+  <div class="side-panel">
+    <div class="panel-box">
+      <div class="label">SCORE</div>
+      <div class="value" id="score-display">0</div>
+    </div>
+    <div class="panel-box">
+      <div class="label">NEXT</div>
+      <canvas class="next-bubble-canvas" id="next-canvas" width="60" height="60"></canvas>
+    </div>
+    <div class="panel-box">
+      <div class="label">SHOTS</div>
+      <div class="value" id="shots-display">0</div>
+    </div>
+    <button class="btn btn-primary" onclick="initGame()">NEW</button>
+    <button class="btn btn-secondary" onclick="toggleMute()">🔇 SFX</button>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="game" width="320" height="480"></canvas>
+    <div id="overlay">
+      <div id="overlay-title"></div>
+      <div id="overlay-sub"></div>
+      <button class="btn btn-primary" style="width:160px" onclick="initGame()">PLAY AGAIN</button>
+    </div>
+  </div>
+</div>
+
+<div id="message">aim and click to shoot!</div>
+
+<script>
+// ─── Constants ───────────────────────────────────────────────────────────────
+const COLS_EVEN  = 8;
+const COLS_ODD   = 7;
+const ROWS       = 12;
+const R          = 20;
+const DIAM       = R * 2;
+const SHOOTER_Y  = 450;
+const COLORS     = ['#ff6bcb','#6bf8ff','#ffe66b','#6bffb0','#ff8c6b','#b06bff'];
+const SNAP_DIST  = R * 2.2;
+const DROP_EVERY = 8;
+
+// ─── State ───────────────────────────────────────────────────────────────────
+let canvas, ctx, nextCtx;
+let grid = [];
+let current = null;
+let nextColor = null;
+let score = 0;
+let shots = 0;
+let mouseX = 160, mouseY = 240;
+let animId = null;
+let muted = false;
+let gameOver = false;
+let dropping = false;
+let rowOffset = 0;
+
+function rowCols(r) {
+  return ((r + rowOffset) % 2 === 0) ? COLS_EVEN : COLS_ODD;
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+function initGame() {
+  canvas  = document.getElementById('game');
+  ctx     = canvas.getContext('2d');
+  nextCtx = document.getElementById('next-canvas').getContext('2d');
+
+  canvas.addEventListener('mousemove', onMouseMove);
+  canvas.addEventListener('click', onShoot);
+  canvas.addEventListener('touchmove', onTouch, { passive: false });
+  canvas.addEventListener('touchend', onTouchEnd, { passive: false });
+
+  score = 0; shots = 0; gameOver = false; dropping = false; rowOffset = 0;
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('message').textContent = 'aim and click to shoot!';
+  updateHUD();
+  buildGrid();
+  nextColor = randomColor();
+  spawnBubble();
+  if (animId) cancelAnimationFrame(animId);
+  loop();
+}
+
+function buildGrid() {
+  grid = [];
+  for (let r = 0; r < ROWS; r++) {
+    const cols = rowCols(r);
+    grid[r] = [];
+    for (let c = 0; c < cols; c++) {
+      grid[r][c] = (r < 5) ? randomColor() : null;
+    }
+  }
+}
+
+function randomColor() {
+  return COLORS[Math.floor(Math.random() * COLORS.length)];
+}
+
+function spawnBubble() {
+  current = {
+    x: 160, y: SHOOTER_Y,
+    color: nextColor,
+    vx: 0, vy: 0,
+    moving: false
+  };
+  nextColor = randomColor();
+  drawNext();
+}
+
+// ─── Grid helpers ─────────────────────────────────────────────────────────────
+function colRow(c, r) {
+  const offset = ((r + rowOffset) % 2 === 0) ? 0 : R;
+  return { x: R + c * DIAM + offset, y: R + r * DIAM };
+}
+
+function isValidSnapTarget(r, c) {
+  if (r === 0) return true;
+  for (const [nr, nc] of neighbors(r, c)) {
+    if (grid[nr] && grid[nr][nc]) return true;
+  }
+  return false;
+}
+
+function nearestEmpty(px, py) {
+  let best = null, bestD = Infinity;
+  for (let r = 0; r < ROWS; r++) {
+    const cols = rowCols(r);
+    for (let c = 0; c < cols; c++) {
+      if (grid[r] && grid[r][c]) continue;
+      if (!isValidSnapTarget(r, c)) continue;
+      const { x, y } = colRow(c, r);
+      const d = dist(px, py, x, y);
+      if (d < bestD) { bestD = d; best = { r, c }; }
+    }
+  }
+  return bestD < SNAP_DIST ? best : null;
+}
+
+function dist(ax, ay, bx, by) {
+  return Math.hypot(ax - bx, ay - by);
+}
+
+function neighbors(r, c) {
+  const even = (r + rowOffset) % 2 === 0;
+  return [
+    [r-1, even ? c-1 : c], [r-1, even ? c : c+1],
+    [r,   c-1],             [r,   c+1],
+    [r+1, even ? c-1 : c], [r+1, even ? c : c+1],
+  ].filter(([nr, nc]) => nr >= 0 && nr < ROWS && nc >= 0 && nc < rowCols(nr));
+}
+
+function floodColor(r, c, color, visited = new Set()) {
+  const key = `${r},${c}`;
+  if (visited.has(key)) return [];
+  if (!grid[r] || c >= rowCols(r) || grid[r][c] !== color) return [];
+  visited.add(key);
+  let group = [[r, c]];
+  for (const [nr, nc] of neighbors(r, c)) {
+    group = group.concat(floodColor(nr, nc, color, visited));
+  }
+  return group;
+}
+
+function floodConnected(r, c, visited = new Set()) {
+  const key = `${r},${c}`;
+  if (visited.has(key)) return [];
+  if (!grid[r] || c >= rowCols(r) || !grid[r][c]) return [];
+  visited.add(key);
+  let group = [[r, c]];
+  for (const [nr, nc] of neighbors(r, c)) {
+    group = group.concat(floodConnected(nr, nc, visited));
+  }
+  return group;
+}
+
+function popGroup(r, c) {
+  const color = grid[r][c];
+  const group = floodColor(r, c, color);
+  if (group.length < 3) return 0;
+  group.forEach(([gr, gc]) => { grid[gr][gc] = null; });
+
+  const anchored = new Set();
+  for (let c2 = 0; c2 < rowCols(0); c2++) {
+    if (grid[0] && grid[0][c2]) floodConnected(0, c2, anchored);
+  }
+  let orphans = 0;
+  for (let row = 0; row < ROWS; row++) {
+    const cols = rowCols(row);
+    for (let col = 0; col < cols; col++) {
+      if (grid[row] && grid[row][col] && !anchored.has(`${row},${col}`)) {
+        grid[row][col] = null;
+        orphans++;
+      }
+    }
+  }
+  return group.length * 10 + orphans * 20;
+}
+
+function dropGrid() {
+  rowOffset++;
+  for (let r = ROWS - 1; r > 0; r--) grid[r] = [...(grid[r-1] || [])];
+  const cols = rowCols(0);
+  grid[0] = Array.from({ length: cols }, () => Math.random() < 0.7 ? randomColor() : null);
+}
+
+function checkWin() {
+  return grid.every(row => row.every(cell => !cell));
+}
+
+function checkLose() {
+  const cols = rowCols(ROWS - 1);
+  for (let c = 0; c < cols; c++) {
+    if (grid[ROWS - 1] && grid[ROWS - 1][c]) return true;
+  }
+  return false;
+}
+
+// ─── Shooting ─────────────────────────────────────────────────────────────────
+function onMouseMove(e) {
+  const rect = canvas.getBoundingClientRect();
+  mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+  mouseY = (e.clientY - rect.top)  * (canvas.height / rect.height);
+}
+
+function onTouch(e) {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  mouseX = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width);
+  mouseY = (e.touches[0].clientY - rect.top)  * (canvas.height / rect.height);
+}
+
+function onTouchEnd(e) {
+  e.preventDefault();
+  onShoot();
+}
+
+function onShoot() {
+  if (!current || current.moving || gameOver || dropping) return;
+  const dx = mouseX - current.x;
+  const dy = mouseY - current.y;
+  if (dy >= 0) return;
+  const len = Math.hypot(dx, dy);
+  const speed = 10;
+  current.vx = (dx / len) * speed;
+  current.vy = (dy / len) * speed;
+  current.moving = true;
+  shots++;
+  updateHUD();
+}
+
+// ─── Update ───────────────────────────────────────────────────────────────────
+function update() {
+  if (!current || !current.moving) return;
+
+  current.x += current.vx;
+  current.y += current.vy;
+
+  if (current.x - R < 0)   { current.x = R;       current.vx *= -1; }
+  if (current.x + R > 320) { current.x = 320 - R; current.vx *= -1; }
+
+  if (current.y - R <= 0) {
+    current.y = R;
+    snapBubble();
+    return;
+  }
+
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < rowCols(r); c++) {
+      if (!grid[r] || !grid[r][c]) continue;
+      const { x, y } = colRow(c, r);
+      if (dist(current.x, current.y, x, y) < DIAM - 2) {
+        snapBubble();
+        return;
+      }
+    }
+  }
+}
+
+function snapBubble() {
+  const pos = nearestEmpty(current.x, current.y);
+  if (!pos) { endGame(false); return; }
+
+  const { r, c } = pos;
+  grid[r][c] = current.color;
+
+  const gained = popGroup(r, c);
+  score += gained;
+  updateHUD();
+
+  if (checkWin()) { endGame(true); return; }
+  if (checkLose()) { endGame(false); return; }
+
+  if (shots % DROP_EVERY === 0) {
+    dropping = true;
+    current = null;
+    setTimeout(() => {
+      dropGrid();
+      dropping = false;
+      if (checkLose()) { endGame(false); return; }
+      spawnBubble();
+    }, 300);
+    return;
+  }
+
+  spawnBubble();
+}
+
+function endGame(win) {
+  gameOver = true;
+  const overlay = document.getElementById('overlay');
+  document.getElementById('overlay-title').textContent = win ? '🎉 YOU WIN!' : '💀 GAME OVER';
+  document.getElementById('overlay-sub').textContent   = `score: ${score}`;
+  overlay.classList.add('show');
+}
+
+// ─── Draw ─────────────────────────────────────────────────────────────────────
+function draw() {
+  ctx.clearRect(0, 0, 320, 480);
+
+  const bg = ctx.createLinearGradient(0, 0, 0, 480);
+  bg.addColorStop(0, '#0d0d1a');
+  bg.addColorStop(1, '#13132b');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, 320, 480);
+
+  ctx.strokeStyle = 'rgba(255,107,203,0.15)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 6]);
+  ctx.beginPath();
+  ctx.moveTo(0, SHOOTER_Y - R - 6);
+  ctx.lineTo(320, SHOOTER_Y - R - 6);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  for (let r = 0; r < ROWS; r++) {
+    const cols = rowCols(r);
+    for (let c = 0; c < cols; c++) {
+      if (grid[r] && grid[r][c]) {
+        const { x, y } = colRow(c, r);
+        drawBubble(ctx, x, y, R, grid[r][c]);
+      }
+    }
+  }
+
+  if (current && !current.moving) drawTrajectory();
+  if (current) drawBubble(ctx, current.x, current.y, R, current.color);
+
+  ctx.strokeStyle = 'rgba(255,107,203,0.3)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(160, SHOOTER_Y, 28, Math.PI, 0);
+  ctx.stroke();
+}
+
+function drawBubble(context, x, y, r, color) {
+  const glow = context.createRadialGradient(x, y, r * 0.1, x, y, r * 1.4);
+  glow.addColorStop(0, color + '55');
+  glow.addColorStop(1, 'transparent');
+  context.fillStyle = glow;
+  context.beginPath();
+  context.arc(x, y, r * 1.4, 0, Math.PI * 2);
+  context.fill();
+
+  const grad = context.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.1, x, y, r);
+  grad.addColorStop(0, lighten(color, 60));
+  grad.addColorStop(0.6, color);
+  grad.addColorStop(1, darken(color, 40));
+  context.fillStyle = grad;
+  context.beginPath();
+  context.arc(x, y, r - 1, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = 'rgba(255,255,255,0.35)';
+  context.beginPath();
+  context.ellipse(x - r * 0.25, y - r * 0.28, r * 0.3, r * 0.18, -0.5, 0, Math.PI * 2);
+  context.fill();
+
+  context.strokeStyle = 'rgba(255,255,255,0.15)';
+  context.lineWidth = 1;
+  context.beginPath();
+  context.arc(x, y, r - 1, 0, Math.PI * 2);
+  context.stroke();
+}
+
+function drawTrajectory() {
+  const dx = mouseX - current.x;
+  const dy = mouseY - current.y;
+  if (dy >= 0) return;
+  const len = Math.hypot(dx, dy);
+  const speed = 10;
+  let vx = (dx / len) * speed;
+  let vy = (dy / len) * speed;
+  let px = current.x, py = current.y;
+
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  for (let i = 0; i < 20; i++) {
+    px += vx * 3; py += vy * 3;
+    if (px - R < 0)   { px = R;       vx *= -1; }
+    if (px + R > 320) { px = 320 - R; vx *= -1; }
+    if (py < 0) break;
+    const s = 3 - i * 0.12;
+    if (s <= 0) break;
+    ctx.beginPath();
+    ctx.arc(px, py, Math.max(s, 0.5), 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawNext() {
+  nextCtx.clearRect(0, 0, 60, 60);
+  drawBubble(nextCtx, 30, 30, R - 2, nextColor);
+}
+
+// ─── Color utils ──────────────────────────────────────────────────────────────
+function lighten(hex, amt) { return shiftColor(hex, amt); }
+function darken(hex, amt)  { return shiftColor(hex, -amt); }
+
+function shiftColor(hex, amt) {
+  const n = parseInt(hex.replace('#',''), 16);
+  let r = Math.min(255, Math.max(0, (n >> 16) + amt));
+  let g = Math.min(255, Math.max(0, ((n >> 8) & 0xff) + amt));
+  let b = Math.min(255, Math.max(0, (n & 0xff) + amt));
+  return `rgb(${r},${g},${b})`;
+}
+
+// ─── HUD ──────────────────────────────────────────────────────────────────────
+function updateHUD() {
+  document.getElementById('score-display').textContent = score;
+  document.getElementById('shots-display').textContent = shots;
+}
+
+function toggleMute() { muted = !muted; }
+
+// ─── Loop ─────────────────────────────────────────────────────────────────────
+function loop() {
+  update();
+  draw();
+  animId = requestAnimationFrame(loop);
+}
+
+window.addEventListener('load', initGame);
+</script>
+</body>
+</html>
