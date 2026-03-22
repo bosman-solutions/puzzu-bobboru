@@ -1,0 +1,10 @@
+services:
+  puzzu-bobboru:
+    build: .
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.puzzu.rule=Host(`puzzu.bosman.solutions`)"
+      - "traefik.http.routers.puzzu.tls=true"
+      - "traefik.http.routers.puzzu.tls.certresolver=letsencrypt"
+      - "traefik.http.services.puzzu.loadbalancer.server.port=80"

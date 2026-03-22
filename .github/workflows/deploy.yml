@@ -1,0 +1,19 @@
+name: Deploy to Melchior
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout latest code
+        uses: actions/checkout@v4
+      - name: Rebuild and restart container
+        run: |
+          cd ${{ github.workspace }}
+          docker compose down
+          docker compose up -d --build
+      - name: Show logs
+        run: |
+          sleep 3
+          docker compose logs --tail=20
