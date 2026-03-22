@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Puzzu-Bobboru 🫧</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;900&display=swap');
@@ -19,6 +19,7 @@
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
 
     body {
       background: var(--bg);
@@ -29,7 +30,6 @@
       min-height: 100vh;
       font-family: 'Nunito', sans-serif;
       color: var(--text);
-      overflow: hidden;
     }
 
     body::before {
@@ -56,14 +56,14 @@
       color: var(--accent);
       text-shadow: 0 0 20px var(--shadow), 0 0 40px var(--shadow);
       letter-spacing: 2px;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
       z-index: 1;
     }
 
     .subtitle {
       font-size: 11px;
       color: var(--accent2);
-      margin-bottom: 12px;
+      margin-bottom: 8px;
       opacity: 0.8;
       z-index: 1;
       font-style: italic;
@@ -73,45 +73,42 @@
       position: relative;
       z-index: 1;
       display: flex;
-      gap: 16px;
+      gap: 12px;
       align-items: flex-start;
     }
 
     .side-panel {
-      width: 110px;
+      width: 90px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 8px;
     }
 
     .panel-box {
       background: var(--panel);
       border: 1px solid rgba(107,248,255,0.2);
       border-radius: 12px;
-      padding: 10px;
+      padding: 8px;
       text-align: center;
       box-shadow: 0 0 12px var(--glow2);
     }
 
     .panel-box .label {
       font-family: 'Press Start 2P', monospace;
-      font-size: 7px;
+      font-size: 6px;
       color: var(--accent2);
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       letter-spacing: 1px;
     }
 
     .panel-box .value {
       font-family: 'Press Start 2P', monospace;
-      font-size: 14px;
+      font-size: 12px;
       color: var(--accent3);
       text-shadow: 0 0 10px rgba(255,230,107,0.6);
     }
 
-    .next-bubble-canvas {
-      display: block;
-      margin: 0 auto;
-    }
+    .next-bubble-canvas { display: block; margin: 0 auto; }
 
     canvas#game {
       display: block;
@@ -122,12 +119,16 @@
         0 0 60px rgba(255,107,203,0.1),
         inset 0 0 30px rgba(0,0,0,0.5);
       cursor: crosshair;
+      max-width: calc(100vw - 120px);
+      max-height: calc(100vh - 160px);
+      width: auto;
+      height: auto;
     }
 
     .btn {
       font-family: 'Press Start 2P', monospace;
-      font-size: 8px;
-      padding: 10px 14px;
+      font-size: 7px;
+      padding: 8px 10px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
@@ -142,10 +143,7 @@
       box-shadow: 0 0 15px var(--shadow);
     }
 
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 25px var(--shadow);
-    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 25px var(--shadow); }
 
     .btn-secondary {
       background: var(--panel);
@@ -153,19 +151,17 @@
       border: 1px solid var(--accent2);
     }
 
-    .btn-secondary:hover {
-      background: rgba(107,248,255,0.1);
-    }
+    .btn-secondary:hover { background: rgba(107,248,255,0.1); }
 
     #message {
       font-family: 'Press Start 2P', monospace;
-      font-size: 9px;
+      font-size: 8px;
       color: var(--accent3);
       text-align: center;
-      min-height: 20px;
+      min-height: 16px;
       text-shadow: 0 0 10px rgba(255,230,107,0.6);
       z-index: 1;
-      margin-top: 8px;
+      margin-top: 6px;
       letter-spacing: 1px;
     }
 
@@ -193,14 +189,48 @@
       line-height: 1.8;
     }
 
-    #overlay-sub {
-      font-size: 13px;
-      color: var(--accent2);
-      text-align: center;
+    #overlay-sub { font-size: 13px; color: var(--accent2); text-align: center; }
+    .canvas-wrap { position: relative; }
+
+    #aim-zone {
+      display: none;
+      width: 100%;
+      height: 60px;
+      margin-top: 6px;
+      background: rgba(255,107,203,0.06);
+      border: 1px solid rgba(255,107,203,0.2);
+      border-radius: 12px;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+      touch-action: none;
+      position: relative;
+      overflow: hidden;
     }
 
-    .canvas-wrap {
-      position: relative;
+    #aim-zone-label {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 7px;
+      color: rgba(255,107,203,0.5);
+      pointer-events: none;
+      letter-spacing: 1px;
+    }
+
+    #aim-thumb {
+      position: absolute;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255,107,203,0.25);
+      border: 2px solid rgba(255,107,203,0.6);
+      pointer-events: none;
+      display: none;
+      transform: translate(-50%, -50%);
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      #aim-zone { display: flex; }
+      canvas#game { cursor: default; }
     }
   </style>
 </head>
@@ -237,21 +267,24 @@
   </div>
 </div>
 
+<div id="aim-zone">
+  <span id="aim-zone-label">drag to aim · lift to shoot</span>
+  <div id="aim-thumb"></div>
+</div>
+
 <div id="message">aim and click to shoot!</div>
 
 <script>
-// ─── Constants ───────────────────────────────────────────────────────────────
 const COLS_EVEN  = 8;
 const COLS_ODD   = 7;
 const ROWS       = 12;
 const R          = 20;
 const DIAM       = R * 2;
 const SHOOTER_Y  = 450;
-const COLORS     = ['#ff6bcb','#6bf8ff','#ffe66b','#6bffb0','#ff8c6b','#b06bff'];
+const COLORS     = ['#ff6bcb','#1a7fff','#ffe66b','#6bffb0','#ff8c6b','#b06bff'];
 const SNAP_DIST  = R * 2.2;
 const DROP_EVERY = 8;
 
-// ─── State ───────────────────────────────────────────────────────────────────
 let canvas, ctx, nextCtx;
 let grid = [];
 let current = null;
@@ -269,7 +302,6 @@ function rowCols(r) {
   return ((r + rowOffset) % 2 === 0) ? COLS_EVEN : COLS_ODD;
 }
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
 function initGame() {
   canvas  = document.getElementById('game');
   ctx     = canvas.getContext('2d');
@@ -277,8 +309,34 @@ function initGame() {
 
   canvas.addEventListener('mousemove', onMouseMove);
   canvas.addEventListener('click', onShoot);
-  canvas.addEventListener('touchmove', onTouch, { passive: false });
-  canvas.addEventListener('touchend', onTouchEnd, { passive: false });
+
+  const aimZone  = document.getElementById('aim-zone');
+  const aimThumb = document.getElementById('aim-thumb');
+
+  aimZone.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const t = e.touches[0];
+    const rect = aimZone.getBoundingClientRect();
+    aimThumb.style.left = (t.clientX - rect.left) + 'px';
+    aimThumb.style.top  = (t.clientY - rect.top)  + 'px';
+    aimThumb.style.display = 'block';
+    updateAim(t);
+  }, { passive: false });
+
+  aimZone.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const t = e.touches[0];
+    const rect = aimZone.getBoundingClientRect();
+    aimThumb.style.left = (t.clientX - rect.left) + 'px';
+    aimThumb.style.top  = (t.clientY - rect.top)  + 'px';
+    updateAim(t);
+  }, { passive: false });
+
+  aimZone.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    aimThumb.style.display = 'none';
+    onShoot();
+  }, { passive: false });
 
   score = 0; shots = 0; gameOver = false; dropping = false; rowOffset = 0;
   document.getElementById('overlay').classList.remove('show');
@@ -289,6 +347,15 @@ function initGame() {
   spawnBubble();
   if (animId) cancelAnimationFrame(animId);
   loop();
+}
+
+function updateAim(touch) {
+  const aimZone = document.getElementById('aim-zone');
+  const zoneRect = aimZone.getBoundingClientRect();
+  const relX = (touch.clientX - zoneRect.left) / zoneRect.width;
+  const relY = (touch.clientY - zoneRect.top)  / zoneRect.height;
+  mouseX = relX * canvas.width;
+  mouseY = SHOOTER_Y - 20 - (1 - relY) * (SHOOTER_Y - 60);
 }
 
 function buildGrid() {
@@ -307,17 +374,11 @@ function randomColor() {
 }
 
 function spawnBubble() {
-  current = {
-    x: 160, y: SHOOTER_Y,
-    color: nextColor,
-    vx: 0, vy: 0,
-    moving: false
-  };
+  current = { x: 160, y: SHOOTER_Y, color: nextColor, vx: 0, vy: 0, moving: false };
   nextColor = randomColor();
   drawNext();
 }
 
-// ─── Grid helpers ─────────────────────────────────────────────────────────────
 function colRow(c, r) {
   const offset = ((r + rowOffset) % 2 === 0) ? 0 : R;
   return { x: R + c * DIAM + offset, y: R + r * DIAM };
@@ -346,9 +407,7 @@ function nearestEmpty(px, py) {
   return bestD < SNAP_DIST ? best : null;
 }
 
-function dist(ax, ay, bx, by) {
-  return Math.hypot(ax - bx, ay - by);
-}
+function dist(ax, ay, bx, by) { return Math.hypot(ax - bx, ay - by); }
 
 function neighbors(r, c) {
   const even = (r + rowOffset) % 2 === 0;
@@ -365,9 +424,7 @@ function floodColor(r, c, color, visited = new Set()) {
   if (!grid[r] || c >= rowCols(r) || grid[r][c] !== color) return [];
   visited.add(key);
   let group = [[r, c]];
-  for (const [nr, nc] of neighbors(r, c)) {
-    group = group.concat(floodColor(nr, nc, color, visited));
-  }
+  for (const [nr, nc] of neighbors(r, c)) group = group.concat(floodColor(nr, nc, color, visited));
   return group;
 }
 
@@ -377,9 +434,7 @@ function floodConnected(r, c, visited = new Set()) {
   if (!grid[r] || c >= rowCols(r) || !grid[r][c]) return [];
   visited.add(key);
   let group = [[r, c]];
-  for (const [nr, nc] of neighbors(r, c)) {
-    group = group.concat(floodConnected(nr, nc, visited));
-  }
+  for (const [nr, nc] of neighbors(r, c)) group = group.concat(floodConnected(nr, nc, visited));
   return group;
 }
 
@@ -388,7 +443,6 @@ function popGroup(r, c) {
   const group = floodColor(r, c, color);
   if (group.length < 3) return 0;
   group.forEach(([gr, gc]) => { grid[gr][gc] = null; });
-
   const anchored = new Set();
   for (let c2 = 0; c2 < rowCols(0); c2++) {
     if (grid[0] && grid[0][c2]) floodConnected(0, c2, anchored);
@@ -413,9 +467,7 @@ function dropGrid() {
   grid[0] = Array.from({ length: cols }, () => Math.random() < 0.7 ? randomColor() : null);
 }
 
-function checkWin() {
-  return grid.every(row => row.every(cell => !cell));
-}
+function checkWin()  { return grid.every(row => row.every(cell => !cell)); }
 
 function checkLose() {
   const cols = rowCols(ROWS - 1);
@@ -425,23 +477,10 @@ function checkLose() {
   return false;
 }
 
-// ─── Shooting ─────────────────────────────────────────────────────────────────
 function onMouseMove(e) {
   const rect = canvas.getBoundingClientRect();
   mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
   mouseY = (e.clientY - rect.top)  * (canvas.height / rect.height);
-}
-
-function onTouch(e) {
-  e.preventDefault();
-  const rect = canvas.getBoundingClientRect();
-  mouseX = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width);
-  mouseY = (e.touches[0].clientY - rect.top)  * (canvas.height / rect.height);
-}
-
-function onTouchEnd(e) {
-  e.preventDefault();
-  onShoot();
 }
 
 function onShoot() {
@@ -458,30 +497,18 @@ function onShoot() {
   updateHUD();
 }
 
-// ─── Update ───────────────────────────────────────────────────────────────────
 function update() {
   if (!current || !current.moving) return;
-
   current.x += current.vx;
   current.y += current.vy;
-
   if (current.x - R < 0)   { current.x = R;       current.vx *= -1; }
   if (current.x + R > 320) { current.x = 320 - R; current.vx *= -1; }
-
-  if (current.y - R <= 0) {
-    current.y = R;
-    snapBubble();
-    return;
-  }
-
+  if (current.y - R <= 0)  { current.y = R; snapBubble(); return; }
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < rowCols(r); c++) {
       if (!grid[r] || !grid[r][c]) continue;
       const { x, y } = colRow(c, r);
-      if (dist(current.x, current.y, x, y) < DIAM - 2) {
-        snapBubble();
-        return;
-      }
+      if (dist(current.x, current.y, x, y) < DIAM - 2) { snapBubble(); return; }
     }
   }
 }
@@ -489,17 +516,13 @@ function update() {
 function snapBubble() {
   const pos = nearestEmpty(current.x, current.y);
   if (!pos) { endGame(false); return; }
-
   const { r, c } = pos;
   grid[r][c] = current.color;
-
   const gained = popGroup(r, c);
   score += gained;
   updateHUD();
-
-  if (checkWin()) { endGame(true); return; }
+  if (checkWin())  { endGame(true);  return; }
   if (checkLose()) { endGame(false); return; }
-
   if (shots % DROP_EVERY === 0) {
     dropping = true;
     current = null;
@@ -511,22 +534,18 @@ function snapBubble() {
     }, 300);
     return;
   }
-
   spawnBubble();
 }
 
 function endGame(win) {
   gameOver = true;
-  const overlay = document.getElementById('overlay');
   document.getElementById('overlay-title').textContent = win ? '🎉 YOU WIN!' : '💀 GAME OVER';
   document.getElementById('overlay-sub').textContent   = `score: ${score}`;
-  overlay.classList.add('show');
+  document.getElementById('overlay').classList.add('show');
 }
 
-// ─── Draw ─────────────────────────────────────────────────────────────────────
 function draw() {
   ctx.clearRect(0, 0, 320, 480);
-
   const bg = ctx.createLinearGradient(0, 0, 0, 480);
   bg.addColorStop(0, '#0d0d1a');
   bg.addColorStop(1, '#13132b');
@@ -597,11 +616,9 @@ function drawTrajectory() {
   const dy = mouseY - current.y;
   if (dy >= 0) return;
   const len = Math.hypot(dx, dy);
-  const speed = 10;
-  let vx = (dx / len) * speed;
-  let vy = (dy / len) * speed;
+  let vx = (dx / len) * 10;
+  let vy = (dy / len) * 10;
   let px = current.x, py = current.y;
-
   ctx.fillStyle = 'rgba(255,255,255,0.25)';
   for (let i = 0; i < 20; i++) {
     px += vx * 3; py += vy * 3;
@@ -621,7 +638,6 @@ function drawNext() {
   drawBubble(nextCtx, 30, 30, R - 2, nextColor);
 }
 
-// ─── Color utils ──────────────────────────────────────────────────────────────
 function lighten(hex, amt) { return shiftColor(hex, amt); }
 function darken(hex, amt)  { return shiftColor(hex, -amt); }
 
@@ -633,21 +649,13 @@ function shiftColor(hex, amt) {
   return `rgb(${r},${g},${b})`;
 }
 
-// ─── HUD ──────────────────────────────────────────────────────────────────────
 function updateHUD() {
   document.getElementById('score-display').textContent = score;
   document.getElementById('shots-display').textContent = shots;
 }
 
 function toggleMute() { muted = !muted; }
-
-// ─── Loop ─────────────────────────────────────────────────────────────────────
-function loop() {
-  update();
-  draw();
-  animId = requestAnimationFrame(loop);
-}
-
+function loop() { update(); draw(); animId = requestAnimationFrame(loop); }
 window.addEventListener('load', initGame);
 </script>
 </body>
