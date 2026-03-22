@@ -5,11 +5,18 @@ services:
     networks:
       - web
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.puzzu.rule=Host(`puzzu.bosman.solutions`)"
-      - "traefik.http.routers.puzzu.entrypoints=websecure"
-      - "traefik.http.routers.puzzu.tls.certresolver=letsencrypt"
-      - "traefik.http.services.puzzu.loadbalancer.server.port=80"
+      - traefik.enable=true
+      # HTTP -> HTTPS redirect
+      - traefik.http.routers.puzzu.entrypoints=web
+      - traefik.http.routers.puzzu.rule=Host(`puzzu.bosman.solutions`)
+      - traefik.http.routers.puzzu.middlewares=redirect-to-https
+      # HTTPS secure route
+      - traefik.http.routers.puzzu-secure.entrypoints=websecure
+      - traefik.http.routers.puzzu-secure.rule=Host(`puzzu.bosman.solutions`)
+      - traefik.http.routers.puzzu-secure.tls=true
+      - traefik.http.routers.puzzu-secure.tls.certresolver=letsencrypt
+      # Internal service port
+      - traefik.http.services.puzzu.loadbalancer.server.port=80
 
 networks:
   web:
