@@ -1,0 +1,6 @@
+services:
+  puzzu-bobboru:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8080:80"
