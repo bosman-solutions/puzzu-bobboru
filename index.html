@@ -254,7 +254,7 @@
       <div class="value" id="shots-display">0</div>
     </div>
     <button class="btn btn-primary" onclick="initGame()">NEW</button>
-    <button class="btn btn-secondary" onclick="toggleMute()">🔇 SFX</button>
+    <button class="btn btn-secondary" id="sfx-btn" onclick="toggleMute()">🔊 SFX</button>
   </div>
 
   <div class="canvas-wrap">
@@ -272,18 +272,19 @@
   <div id="aim-thumb"></div>
 </div>
 
-<div id="message">aim and click to shoot!</div>
+<div id="message">aim and tap to shoot!</div>
 
 <script>
-const COLS_EVEN  = 8;
-const COLS_ODD   = 7;
+const COLS_EVEN  = 10;
+const COLS_ODD   = 9;
 const ROWS       = 12;
-const R          = 20;
+const R          = 16;
 const DIAM       = R * 2;
 const SHOOTER_Y  = 450;
 const COLORS     = ['#ff6bcb','#1a7fff','#ffe66b','#6bffb0','#ff8c6b','#b06bff'];
-const SNAP_DIST  = R * 2.2;
-const DROP_EVERY = 8;
+const SNAP_DIST  = R * 2.6;
+const DROP_EVERY = 10;
+const SHOT_SPEED = 8;
 
 let canvas, ctx, nextCtx;
 let grid = [];
@@ -307,8 +308,15 @@ function initGame() {
   ctx     = canvas.getContext('2d');
   nextCtx = document.getElementById('next-canvas').getContext('2d');
 
+  if (!window._wired) {
+  window._wired = true;
   canvas.addEventListener('mousemove', onMouseMove);
   canvas.addEventListener('click', onShoot);
+
+  // touch: aim by dragging on the BOARD itself, lift to shoot
+  canvas.addEventListener('touchstart', (e) => { e.preventDefault(); onCanvasTouch(e.touches[0]); }, { passive: false });
+  canvas.addEventListener('touchmove',  (e) => { e.preventDefault(); onCanvasTouch(e.touches[0]); }, { passive: false });
+  canvas.addEventListener('touchend',   (e) => { e.preventDefault(); onShoot(); }, { passive: false });
 
   const aimZone  = document.getElementById('aim-zone');
   const aimThumb = document.getElementById('aim-thumb');
@@ -337,16 +345,24 @@ function initGame() {
     aimThumb.style.display = 'none';
     onShoot();
   }, { passive: false });
+  }
 
   score = 0; shots = 0; gameOver = false; dropping = false; rowOffset = 0;
   document.getElementById('overlay').classList.remove('show');
-  document.getElementById('message').textContent = 'aim and click to shoot!';
+  document.getElementById('message').textContent = 'aim and tap to shoot!';
   updateHUD();
   buildGrid();
   nextColor = randomColor();
   spawnBubble();
   if (animId) cancelAnimationFrame(animId);
   loop();
+}
+
+function onCanvasTouch(t) {
+  const rect = canvas.getBoundingClientRect();
+  mouseX = (t.clientX - rect.left) * (canvas.width / rect.width);
+  mouseY = (t.clientY - rect.top)  * (canvas.height / rect.height);
+  if (mouseY > SHOOTER_Y - 30) mouseY = SHOOTER_Y - 30;
 }
 
 function updateAim(touch) {
@@ -489,10 +505,10 @@ function onShoot() {
   const dy = mouseY - current.y;
   if (dy >= 0) return;
   const len = Math.hypot(dx, dy);
-  const speed = 10;
-  current.vx = (dx / len) * speed;
-  current.vy = (dy / len) * speed;
+  current.vx = (dx / len) * SHOT_SPEED;
+  current.vy = (dy / len) * SHOT_SPEED;
   current.moving = true;
+  blip(330, 0.05, 'sine', 0.07);
   shots++;
   updateHUD();
 }
@@ -501,8 +517,8 @@ function update() {
   if (!current || !current.moving) return;
   current.x += current.vx;
   current.y += current.vy;
-  if (current.x - R < 0)   { current.x = R;       current.vx *= -1; }
-  if (current.x + R > 320) { current.x = 320 - R; current.vx *= -1; }
+  if (current.x - R < 0)   { current.x = R;       current.vx *= -1; blip(200, 0.03, 'square', 0.04); }
+  if (current.x + R > 320) { current.x = 320 - R; current.vx *= -1; blip(200, 0.03, 'square', 0.04); }
   if (current.y - R <= 0)  { current.y = R; snapBubble(); return; }
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < rowCols(r); c++) {
@@ -515,10 +531,17 @@ function update() {
 
 function snapBubble() {
   const pos = nearestEmpty(current.x, current.y);
-  if (!pos) { endGame(false); return; }
+  if (!pos) {
+    document.getElementById('message').textContent = 'lost that one! 🫧';
+    blip(160, 0.1, 'sine', 0.08);
+    spawnBubble();
+    return;
+  }
   const { r, c } = pos;
   grid[r][c] = current.color;
   const gained = popGroup(r, c);
+  if (gained > 0) blip(500 + Math.min(gained, 400), 0.14, 'triangle', 0.16);
+  else blip(240, 0.04, 'sine', 0.06);
   score += gained;
   updateHUD();
   if (checkWin())  { endGame(true);  return; }
@@ -539,6 +562,8 @@ function snapBubble() {
 
 function endGame(win) {
   gameOver = true;
+  if (win) { blip(523, 0.12); setTimeout(() => blip(659, 0.12), 120); setTimeout(() => blip(784, 0.2), 240); }
+  else blip(130, 0.4, 'sine', 0.1);
   document.getElementById('overlay-title').textContent = win ? '🎉 YOU WIN!' : '💀 GAME OVER';
   document.getElementById('overlay-sub').textContent   = `score: ${score}`;
   document.getElementById('overlay').classList.add('show');
@@ -616,16 +641,16 @@ function drawTrajectory() {
   const dy = mouseY - current.y;
   if (dy >= 0) return;
   const len = Math.hypot(dx, dy);
-  let vx = (dx / len) * 10;
-  let vy = (dy / len) * 10;
+  let vx = (dx / len) * SHOT_SPEED;
+  let vy = (dy / len) * SHOT_SPEED;
   let px = current.x, py = current.y;
-  ctx.fillStyle = 'rgba(255,255,255,0.25)';
-  for (let i = 0; i < 20; i++) {
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  for (let i = 0; i < 34; i++) {
     px += vx * 3; py += vy * 3;
     if (px - R < 0)   { px = R;       vx *= -1; }
     if (px + R > 320) { px = 320 - R; vx *= -1; }
     if (py < 0) break;
-    const s = 3 - i * 0.12;
+    const s = 3 - i * 0.07;
     if (s <= 0) break;
     ctx.beginPath();
     ctx.arc(px, py, Math.max(s, 0.5), 0, Math.PI * 2);
@@ -654,7 +679,23 @@ function updateHUD() {
   document.getElementById('shots-display').textContent = shots;
 }
 
-function toggleMute() { muted = !muted; }
+let _ac = null;
+function blip(freq, dur = 0.08, type = 'sine', gain = 0.12) {
+  if (muted) return;
+  try {
+    _ac = _ac || new (window.AudioContext || window.webkitAudioContext)();
+    const o = _ac.createOscillator(), g = _ac.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(gain, _ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, _ac.currentTime + dur);
+    o.connect(g); g.connect(_ac.destination);
+    o.start(); o.stop(_ac.currentTime + dur);
+  } catch (e) {}
+}
+function toggleMute() {
+  muted = !muted;
+  document.getElementById('sfx-btn').textContent = muted ? '🔇 SFX' : '🔊 SFX';
+}
 function loop() { update(); draw(); animId = requestAnimationFrame(loop); }
 window.addEventListener('load', initGame);
 </script>
