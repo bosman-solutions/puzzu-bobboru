@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # One-time admin bootstrap. Run on the control-plane node with privileges.
-# Required env: NFS_SERVER, NFS_PATH, API_SERVER.
+# Reads ci/deploy.env (or env): NFS_SERVER, NFS_PATH, API_SERVER.
 set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+[ -f "$ROOT/ci/deploy.env" ] && { set -a; . "$ROOT/ci/deploy.env"; set +a; }
 : "${NFS_SERVER:?}"; : "${NFS_PATH:?}"; : "${API_SERVER:?}"
 KUBECTL="${KUBECTL:-kubectl}"
 NS=arcade
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="${KUBECONFIG_OUT:-/opt/puzzu/kubeconfig}"
 
 # scores directory on the export
@@ -51,3 +52,4 @@ contexts: [{ name: x, context: { cluster: c, namespace: ${NS}, user: u } }]
 current-context: x
 YAML
 chmod 0644 "$OUT"
+echo "bootstrap complete."
