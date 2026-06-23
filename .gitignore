@@ -12,3 +12,6 @@ Thumbs.db
 # local test artifact (engine.js is copied next to server.js at runtime)
 server/engine.js
 node_modules/
+
+# deploy config (real values)
+ci/deploy.env
