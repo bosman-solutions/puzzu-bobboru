@@ -20,7 +20,7 @@ docker rm -f puzzu-runner 2>/dev/null || true
 docker run -d \
   --name puzzu-runner \
   --restart=unless-stopped \
-  -e GH_OWNER -e GH_REPO -e GITHUB_PAT -e INGRESS_HOST \
+  -e GH_OWNER="$GH_OWNER" -e GH_REPO="$GH_REPO" -e GITHUB_PAT -e INGRESS_HOST \
   -v puzzu-runner-cfg:/home/runner \
   -v /opt/puzzu/kubeconfig:/home/runner/.kube/config:ro \
   puzzu-runner:latest
