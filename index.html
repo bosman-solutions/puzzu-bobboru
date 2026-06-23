@@ -364,11 +364,11 @@ async function initGame() {
 
   hideOverlay();
   projectile = null; dropping = false;
-  document.getElementById('message').textContent =
-    session === null ? 'aim and tap! (offline — not saving)' : 'aim and tap to shoot!';
 
   const seed = await newSession();
   game = new PuzzuEngine(seed);
+  document.getElementById('message').textContent =
+    session === null ? 'aim and tap! (offline — not saving)' : 'aim and tap to shoot!';
   updateHUD();
   if (animId) cancelAnimationFrame(animId);
   loop();
