@@ -3,7 +3,7 @@
 # Reads ci/deploy.env (or env): GITHUB_PAT, INGRESS_HOST.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-ROOT="$(cd "$HERE/.." && pwd)"
+ROOT="$(cd "$HERE/../.." && pwd)"
 [ -f "$ROOT/ci/deploy.env" ] && { set -a; . "$ROOT/ci/deploy.env"; set +a; }
 : "${GITHUB_PAT:?set in ci/deploy.env}"
 : "${INGRESS_HOST:?set in ci/deploy.env}"
