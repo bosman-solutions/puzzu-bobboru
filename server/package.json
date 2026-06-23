@@ -1,0 +1,14 @@
+{
+  "name": "puzzu-api",
+  "version": "1.0.0",
+  "description": "Authoritative leaderboard for Puzzu-Bobboru — server-side replay verification.",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

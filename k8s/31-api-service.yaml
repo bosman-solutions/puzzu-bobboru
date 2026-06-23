@@ -1,0 +1,15 @@
+# Cluster address for the API; the ingress routes /api here.
+apiVersion: v1
+kind: Service
+metadata:
+  name: puzzu-api
+  namespace: arcade
+  labels:
+    app: puzzu-api
+spec:
+  selector:
+    app: puzzu-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080

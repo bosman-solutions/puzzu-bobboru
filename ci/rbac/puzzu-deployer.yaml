@@ -1,0 +1,52 @@
+# Deploy identity scoped to puzzu's resources in this namespace.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: puzzu-deployer
+  namespace: arcade
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: puzzu-deployer
+  namespace: arcade
+rules:
+  - apiGroups: [""]
+    resources: [configmaps, services, persistentvolumeclaims]
+    verbs: [get, list, watch, create, update, patch]
+  - apiGroups: ["apps"]
+    resources: [deployments, replicasets]
+    verbs: [get, list, watch, create, update, patch]
+  - apiGroups: ["apps"]
+    resources: [deployments/scale]
+    verbs: [get, update, patch]
+  - apiGroups: ["traefik.io"]
+    resources: [ingressroutes]
+    verbs: [get, list, watch, create, update, patch]
+  - apiGroups: [""]
+    resources: [pods, pods/log]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: puzzu-deployer
+  namespace: arcade
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: puzzu-deployer
+subjects:
+  - kind: ServiceAccount
+    name: puzzu-deployer
+    namespace: arcade
+---
+# Stable token backing the scoped kubeconfig.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: puzzu-deployer-token
+  namespace: arcade
+  annotations:
+    kubernetes.io/service-account.name: puzzu-deployer
+type: kubernetes.io/service-account-token

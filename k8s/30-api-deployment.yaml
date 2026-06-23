@@ -1,0 +1,66 @@
+# Leaderboard API: stock node image, code mounted from a ConfigMap, one writer.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: puzzu-api
+  namespace: arcade
+  labels:
+    app: puzzu-api
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate          # single writer to the shared volume
+  selector:
+    matchLabels:
+      app: puzzu-api
+  template:
+    metadata:
+      labels:
+        app: puzzu-api
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: arm64
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      securityContext:
+        runAsUser: 65534      # matches the NFS export owner
+        runAsGroup: 65534
+        fsGroup: 65534
+      containers:
+        - name: api
+          image: node:22-alpine
+          workingDir: /app
+          command: ["node", "server.js"]
+          ports:
+            - containerPort: 8080
+          env:
+            - { name: PORT, value: "8080" }
+            - { name: DATA_DIR, value: /data }
+            - name: PUZZU_HMAC_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: puzzu-api
+                  key: PUZZU_HMAC_SECRET
+          volumeMounts:
+            - { name: src, mountPath: /app, readOnly: true }
+            - { name: data, mountPath: /data }
+          readinessProbe:
+            httpGet: { path: /api/health, port: 8080 }
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /api/health, port: 8080 }
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests: { cpu: 25m, memory: 32Mi }
+            limits: { memory: 96Mi }
+      volumes:
+        - name: src
+          configMap:
+            name: puzzu-api-src
+        - name: data
+          persistentVolumeClaim:
+            claimName: puzzu-scores
