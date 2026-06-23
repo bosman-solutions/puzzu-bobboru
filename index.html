@@ -78,7 +78,7 @@
     }
 
     .side-panel {
-      width: 90px;
+      width: 104px;
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -108,7 +108,18 @@
       text-shadow: 0 0 10px rgba(255,230,107,0.6);
     }
 
-    .next-bubble-canvas { display: block; margin: 0 auto; }
+    .lb-list { list-style: none; text-align: left; margin: 0; padding: 0; }
+    .lb-list li {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 6px;
+      color: var(--text);
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 0;
+      letter-spacing: 0.5px;
+    }
+    .lb-list .lb-ini { color: var(--accent2); }
+    .lb-empty { font-family: 'Press Start 2P', monospace; font-size: 6px; color: rgba(240,238,255,0.4); }
 
     canvas#game {
       display: block;
@@ -119,7 +130,7 @@
         0 0 60px rgba(255,107,203,0.1),
         inset 0 0 30px rgba(0,0,0,0.5);
       cursor: crosshair;
-      max-width: calc(100vw - 120px);
+      max-width: calc(100vw - 140px);
       max-height: calc(100vh - 160px);
       width: auto;
       height: auto;
@@ -142,7 +153,6 @@
       color: white;
       box-shadow: 0 0 15px var(--shadow);
     }
-
     .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 25px var(--shadow); }
 
     .btn-secondary {
@@ -150,7 +160,6 @@
       color: var(--accent2);
       border: 1px solid var(--accent2);
     }
-
     .btn-secondary:hover { background: rgba(107,248,255,0.1); }
 
     #message {
@@ -169,28 +178,62 @@
       display: none;
       position: absolute;
       inset: 0;
-      background: rgba(13,13,26,0.88);
+      background: rgba(13,13,26,0.92);
       border-radius: 12px;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 16px;
+      gap: 14px;
       z-index: 10;
+      padding: 12px;
     }
-
     #overlay.show { display: flex; }
 
     #overlay-title {
       font-family: 'Press Start 2P', monospace;
-      font-size: clamp(12px, 3vw, 22px);
+      font-size: clamp(12px, 3vw, 20px);
       color: var(--accent);
       text-shadow: 0 0 20px var(--shadow);
       text-align: center;
       line-height: 1.8;
     }
-
-    #overlay-sub { font-size: 13px; color: var(--accent2); text-align: center; }
+    #overlay-sub { font-family: 'Press Start 2P', monospace; font-size: 9px; color: var(--accent2); text-align: center; }
     .canvas-wrap { position: relative; }
+
+    #initials-entry { display: none; flex-direction: column; align-items: center; gap: 10px; }
+    #initials-entry.show { display: flex; }
+    .ini-prompt { font-family: 'Press Start 2P', monospace; font-size: 8px; color: var(--accent3); }
+    .ini-slots { display: flex; gap: 10px; }
+    .ini-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .ini-char {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 22px;
+      width: 34px; height: 40px;
+      line-height: 40px; text-align: center;
+      color: var(--text);
+      background: rgba(107,248,255,0.06);
+      border: 2px solid rgba(107,248,255,0.25);
+      border-radius: 8px;
+    }
+    .ini-slot.sel .ini-char { border-color: var(--accent); color: var(--accent3); box-shadow: 0 0 14px var(--shadow); }
+    .ini-arrow {
+      font-family: 'Press Start 2P', monospace; font-size: 8px;
+      width: 34px; padding: 4px 0; cursor: pointer;
+      background: var(--panel); color: var(--accent2);
+      border: 1px solid rgba(107,248,255,0.3); border-radius: 6px;
+    }
+    .ini-arrow:active { background: rgba(107,248,255,0.15); }
+
+    #overlay-board { display: none; width: 240px; max-width: 90%; }
+    #overlay-board.show { display: block; }
+    #overlay-board ol { list-style: none; margin: 8px 0; padding: 0; }
+    #overlay-board li {
+      font-family: 'Press Start 2P', monospace; font-size: 8px;
+      display: flex; justify-content: space-between; gap: 8px;
+      padding: 3px 4px; color: var(--text); border-radius: 4px;
+    }
+    #overlay-board li.me { color: var(--accent3); background: rgba(255,230,107,0.08); text-shadow: 0 0 8px rgba(255,230,107,0.6); }
+    #overlay-board .ob-ini { color: var(--accent2); }
 
     #aim-zone {
       display: none;
@@ -207,25 +250,14 @@
       position: relative;
       overflow: hidden;
     }
-
     #aim-zone-label {
-      font-family: 'Press Start 2P', monospace;
-      font-size: 7px;
-      color: rgba(255,107,203,0.5);
-      pointer-events: none;
-      letter-spacing: 1px;
+      font-family: 'Press Start 2P', monospace; font-size: 7px;
+      color: rgba(255,107,203,0.5); pointer-events: none; letter-spacing: 1px;
     }
-
     #aim-thumb {
-      position: absolute;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: rgba(255,107,203,0.25);
-      border: 2px solid rgba(255,107,203,0.6);
-      pointer-events: none;
-      display: none;
-      transform: translate(-50%, -50%);
+      position: absolute; width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,107,203,0.25); border: 2px solid rgba(255,107,203,0.6);
+      pointer-events: none; display: none; transform: translate(-50%, -50%);
     }
 
     @media (hover: none) and (pointer: coarse) {
@@ -237,7 +269,6 @@
 <body>
 
 <h1>🫧 PUZZU-BOBBORU</h1>
-<p class="subtitle">made with love ♥</p>
 
 <div class="game-wrap">
   <div class="side-panel">
@@ -246,12 +277,12 @@
       <div class="value" id="score-display">0</div>
     </div>
     <div class="panel-box">
-      <div class="label">NEXT</div>
-      <canvas class="next-bubble-canvas" id="next-canvas" width="60" height="60"></canvas>
-    </div>
-    <div class="panel-box">
       <div class="label">SHOTS</div>
       <div class="value" id="shots-display">0</div>
+    </div>
+    <div class="panel-box">
+      <div class="label">HIGH SCORES</div>
+      <ul class="lb-list" id="lb-list"><li class="lb-empty">…</li></ul>
     </div>
     <button class="btn btn-primary" onclick="initGame()">NEW</button>
     <button class="btn btn-secondary" id="sfx-btn" onclick="toggleMute()">🔊 SFX</button>
@@ -262,7 +293,19 @@
     <div id="overlay">
       <div id="overlay-title"></div>
       <div id="overlay-sub"></div>
-      <button class="btn btn-primary" style="width:160px" onclick="initGame()">PLAY AGAIN</button>
+
+      <div id="initials-entry">
+        <div class="ini-prompt">ENTER YOUR INITIALS</div>
+        <div class="ini-slots" id="ini-slots"></div>
+        <button class="btn btn-primary" style="width:160px" id="ini-submit">SUBMIT</button>
+      </div>
+
+      <div id="overlay-board">
+        <div class="ini-prompt" style="text-align:center">TOP SCORES</div>
+        <ol id="overlay-board-list"></ol>
+      </div>
+
+      <button class="btn btn-primary" style="width:160px" id="play-again" onclick="initGame()">PLAY AGAIN</button>
     </div>
   </div>
 </div>
@@ -274,409 +317,361 @@
 
 <div id="message">aim and tap to shoot!</div>
 
+<script src="engine.js"></script>
 <script>
-const COLS_EVEN  = 10;
-const COLS_ODD   = 9;
-const ROWS       = 12;
-const R          = 16;
-const DIAM       = R * 2;
-const SHOOTER_Y  = 450;
-const COLORS     = ['#ff6bcb','#1a7fff','#ffe66b','#6bffb0','#ff8c6b','#b06bff'];
-const SNAP_DIST  = R * 2.6;
-const DROP_EVERY = 10;
-const SHOT_SPEED = 8;
+const API_BASE = ''; // same-origin
+const C = PuzzuEngine.CONST;
+const colorHex = PuzzuEngine.colorHex;
 
-let canvas, ctx, nextCtx;
-let grid = [];
-let current = null;
-let nextColor = null;
-let score = 0;
-let shots = 0;
+let canvas, ctx;
+let game = null;           // PuzzuEngine instance
+let session = null;        // { sid, seed, iat, sig } from /api/session, or null offline
+let projectile = null;     // { points, idx, color, mx, my } during flight animation
 let mouseX = 160, mouseY = 240;
 let animId = null;
 let muted = false;
-let gameOver = false;
 let dropping = false;
-let rowOffset = 0;
 
-function rowCols(r) {
-  return ((r + rowOffset) % 2 === 0) ? COLS_EVEN : COLS_ODD;
+/* ---------- session + lifecycle ---------- */
+async function newSession() {
+  try {
+    const r = await fetch(API_BASE + '/api/session', { method: 'POST' });
+    if (!r.ok) throw new Error('session ' + r.status);
+    session = await r.json();
+    return session.seed >>> 0;
+  } catch (e) {
+    session = null; // offline / local dev — playable, but scores won't save
+    return (Math.floor(Math.random() * 0xffffffff)) >>> 0;
+  }
 }
 
-function initGame() {
-  canvas  = document.getElementById('game');
-  ctx     = canvas.getContext('2d');
-  nextCtx = document.getElementById('next-canvas').getContext('2d');
+async function initGame() {
+  canvas = document.getElementById('game');
+  ctx = canvas.getContext('2d');
 
   if (!window._wired) {
-  window._wired = true;
-  canvas.addEventListener('mousemove', onMouseMove);
-  canvas.addEventListener('click', onShoot);
-
-  // touch: aim by dragging on the BOARD itself, lift to shoot
-  canvas.addEventListener('touchstart', (e) => { e.preventDefault(); onCanvasTouch(e.touches[0]); }, { passive: false });
-  canvas.addEventListener('touchmove',  (e) => { e.preventDefault(); onCanvasTouch(e.touches[0]); }, { passive: false });
-  canvas.addEventListener('touchend',   (e) => { e.preventDefault(); onShoot(); }, { passive: false });
-
-  const aimZone  = document.getElementById('aim-zone');
-  const aimThumb = document.getElementById('aim-thumb');
-
-  aimZone.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    const t = e.touches[0];
-    const rect = aimZone.getBoundingClientRect();
-    aimThumb.style.left = (t.clientX - rect.left) + 'px';
-    aimThumb.style.top  = (t.clientY - rect.top)  + 'px';
-    aimThumb.style.display = 'block';
-    updateAim(t);
-  }, { passive: false });
-
-  aimZone.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-    const t = e.touches[0];
-    const rect = aimZone.getBoundingClientRect();
-    aimThumb.style.left = (t.clientX - rect.left) + 'px';
-    aimThumb.style.top  = (t.clientY - rect.top)  + 'px';
-    updateAim(t);
-  }, { passive: false });
-
-  aimZone.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    aimThumb.style.display = 'none';
-    onShoot();
-  }, { passive: false });
+    window._wired = true;
+    canvas.addEventListener('mousemove', onMouseMove);
+    canvas.addEventListener('click', onShoot);
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); onCanvasTouch(e.touches[0]); }, { passive: false });
+    canvas.addEventListener('touchmove',  (e) => { e.preventDefault(); onCanvasTouch(e.touches[0]); }, { passive: false });
+    canvas.addEventListener('touchend',   (e) => { e.preventDefault(); onShoot(); }, { passive: false });
+    wireAimZone();
+    wireInitials();
+    document.addEventListener('keydown', onKey);
+    loadLeaderboard();
   }
 
-  score = 0; shots = 0; gameOver = false; dropping = false; rowOffset = 0;
-  document.getElementById('overlay').classList.remove('show');
-  document.getElementById('message').textContent = 'aim and tap to shoot!';
+  hideOverlay();
+  projectile = null; dropping = false;
+  document.getElementById('message').textContent =
+    session === null ? 'aim and tap! (offline — not saving)' : 'aim and tap to shoot!';
+
+  const seed = await newSession();
+  game = new PuzzuEngine(seed);
   updateHUD();
-  buildGrid();
-  nextColor = randomColor();
-  spawnBubble();
   if (animId) cancelAnimationFrame(animId);
   loop();
 }
 
-function onCanvasTouch(t) {
-  const rect = canvas.getBoundingClientRect();
-  mouseX = (t.clientX - rect.left) * (canvas.width / rect.width);
-  mouseY = (t.clientY - rect.top)  * (canvas.height / rect.height);
-  if (mouseY > SHOOTER_Y - 30) mouseY = SHOOTER_Y - 30;
-}
-
-function updateAim(touch) {
-  const aimZone = document.getElementById('aim-zone');
-  const zoneRect = aimZone.getBoundingClientRect();
-  const relX = (touch.clientX - zoneRect.left) / zoneRect.width;
-  const relY = (touch.clientY - zoneRect.top)  / zoneRect.height;
-  mouseX = relX * canvas.width;
-  mouseY = SHOOTER_Y - 20 - (1 - relY) * (SHOOTER_Y - 60);
-}
-
-function buildGrid() {
-  grid = [];
-  for (let r = 0; r < ROWS; r++) {
-    const cols = rowCols(r);
-    grid[r] = [];
-    for (let c = 0; c < cols; c++) {
-      grid[r][c] = (r < 5) ? randomColor() : null;
-    }
-  }
-}
-
-function randomColor() {
-  return COLORS[Math.floor(Math.random() * COLORS.length)];
-}
-
-function spawnBubble() {
-  current = { x: 160, y: SHOOTER_Y, color: nextColor, vx: 0, vy: 0, moving: false };
-  nextColor = randomColor();
-  drawNext();
-}
-
-function colRow(c, r) {
-  const offset = ((r + rowOffset) % 2 === 0) ? 0 : R;
-  return { x: R + c * DIAM + offset, y: R + r * DIAM };
-}
-
-function isValidSnapTarget(r, c) {
-  if (r === 0) return true;
-  for (const [nr, nc] of neighbors(r, c)) {
-    if (grid[nr] && grid[nr][nc]) return true;
-  }
-  return false;
-}
-
-function nearestEmpty(px, py) {
-  let best = null, bestD = Infinity;
-  for (let r = 0; r < ROWS; r++) {
-    const cols = rowCols(r);
-    for (let c = 0; c < cols; c++) {
-      if (grid[r] && grid[r][c]) continue;
-      if (!isValidSnapTarget(r, c)) continue;
-      const { x, y } = colRow(c, r);
-      const d = dist(px, py, x, y);
-      if (d < bestD) { bestD = d; best = { r, c }; }
-    }
-  }
-  return bestD < SNAP_DIST ? best : null;
-}
-
-function dist(ax, ay, bx, by) { return Math.hypot(ax - bx, ay - by); }
-
-function neighbors(r, c) {
-  const even = (r + rowOffset) % 2 === 0;
-  return [
-    [r-1, even ? c-1 : c], [r-1, even ? c : c+1],
-    [r,   c-1],             [r,   c+1],
-    [r+1, even ? c-1 : c], [r+1, even ? c : c+1],
-  ].filter(([nr, nc]) => nr >= 0 && nr < ROWS && nc >= 0 && nc < rowCols(nr));
-}
-
-function floodColor(r, c, color, visited = new Set()) {
-  const key = `${r},${c}`;
-  if (visited.has(key)) return [];
-  if (!grid[r] || c >= rowCols(r) || grid[r][c] !== color) return [];
-  visited.add(key);
-  let group = [[r, c]];
-  for (const [nr, nc] of neighbors(r, c)) group = group.concat(floodColor(nr, nc, color, visited));
-  return group;
-}
-
-function floodConnected(r, c, visited = new Set()) {
-  const key = `${r},${c}`;
-  if (visited.has(key)) return [];
-  if (!grid[r] || c >= rowCols(r) || !grid[r][c]) return [];
-  visited.add(key);
-  let group = [[r, c]];
-  for (const [nr, nc] of neighbors(r, c)) group = group.concat(floodConnected(nr, nc, visited));
-  return group;
-}
-
-function popGroup(r, c) {
-  const color = grid[r][c];
-  const group = floodColor(r, c, color);
-  if (group.length < 3) return 0;
-  group.forEach(([gr, gc]) => { grid[gr][gc] = null; });
-  const anchored = new Set();
-  for (let c2 = 0; c2 < rowCols(0); c2++) {
-    if (grid[0] && grid[0][c2]) floodConnected(0, c2, anchored);
-  }
-  let orphans = 0;
-  for (let row = 0; row < ROWS; row++) {
-    const cols = rowCols(row);
-    for (let col = 0; col < cols; col++) {
-      if (grid[row] && grid[row][col] && !anchored.has(`${row},${col}`)) {
-        grid[row][col] = null;
-        orphans++;
-      }
-    }
-  }
-  return group.length * 10 + orphans * 20;
-}
-
-function dropGrid() {
-  rowOffset++;
-  for (let r = ROWS - 1; r > 0; r--) grid[r] = [...(grid[r-1] || [])];
-  const cols = rowCols(0);
-  grid[0] = Array.from({ length: cols }, () => Math.random() < 0.7 ? randomColor() : null);
-}
-
-function checkWin()  { return grid.every(row => row.every(cell => !cell)); }
-
-function checkLose() {
-  const cols = rowCols(ROWS - 1);
-  for (let c = 0; c < cols; c++) {
-    if (grid[ROWS - 1] && grid[ROWS - 1][c]) return true;
-  }
-  return false;
-}
-
+/* ---------- input ---------- */
 function onMouseMove(e) {
   const rect = canvas.getBoundingClientRect();
   mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
   mouseY = (e.clientY - rect.top)  * (canvas.height / rect.height);
 }
+function onCanvasTouch(t) {
+  const rect = canvas.getBoundingClientRect();
+  mouseX = (t.clientX - rect.left) * (canvas.width / rect.width);
+  mouseY = (t.clientY - rect.top)  * (canvas.height / rect.height);
+  if (mouseY > C.SHOOTER_Y - 30) mouseY = C.SHOOTER_Y - 30;
+}
+function wireAimZone() {
+  const aimZone = document.getElementById('aim-zone');
+  const aimThumb = document.getElementById('aim-thumb');
+  const place = (t) => {
+    const rect = aimZone.getBoundingClientRect();
+    aimThumb.style.left = (t.clientX - rect.left) + 'px';
+    aimThumb.style.top  = (t.clientY - rect.top)  + 'px';
+  };
+  const aim = (t) => {
+    const rect = aimZone.getBoundingClientRect();
+    const relX = (t.clientX - rect.left) / rect.width;
+    const relY = (t.clientY - rect.top)  / rect.height;
+    mouseX = relX * canvas.width;
+    mouseY = C.SHOOTER_Y - 20 - (1 - relY) * (C.SHOOTER_Y - 60);
+  };
+  aimZone.addEventListener('touchstart', (e) => { e.preventDefault(); const t = e.touches[0]; place(t); aimThumb.style.display = 'block'; aim(t); }, { passive: false });
+  aimZone.addEventListener('touchmove',  (e) => { e.preventDefault(); const t = e.touches[0]; place(t); aim(t); }, { passive: false });
+  aimZone.addEventListener('touchend',   (e) => { e.preventDefault(); aimThumb.style.display = 'none'; onShoot(); }, { passive: false });
+}
 
 function onShoot() {
-  if (!current || current.moving || gameOver || dropping) return;
-  const dx = mouseX - current.x;
-  const dy = mouseY - current.y;
-  if (dy >= 0) return;
-  const len = Math.hypot(dx, dy);
-  current.vx = (dx / len) * SHOT_SPEED;
-  current.vy = (dy / len) * SHOT_SPEED;
-  current.moving = true;
+  if (!game || game.over || projectile || dropping) return;
+  const mx = mouseX, my = mouseY;
+  if (my >= C.SHOOTER_Y) return; // must aim upward
+  const tr = game.trace(mx, my);
+  if (!tr) return;
+  projectile = { points: tr.points, idx: 0, color: game.current, mx, my, lastX: C.SHOOTER_X };
   blip(330, 0.05, 'sine', 0.07);
-  shots++;
-  updateHUD();
 }
 
-function update() {
-  if (!current || !current.moving) return;
-  current.x += current.vx;
-  current.y += current.vy;
-  if (current.x - R < 0)   { current.x = R;       current.vx *= -1; blip(200, 0.03, 'square', 0.04); }
-  if (current.x + R > 320) { current.x = 320 - R; current.vx *= -1; blip(200, 0.03, 'square', 0.04); }
-  if (current.y - R <= 0)  { current.y = R; snapBubble(); return; }
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < rowCols(r); c++) {
-      if (!grid[r] || !grid[r][c]) continue;
-      const { x, y } = colRow(c, r);
-      if (dist(current.x, current.y, x, y) < DIAM - 2) { snapBubble(); return; }
+/* advance the flight animation, then commit the shot to the engine */
+function stepProjectile() {
+  if (!projectile) return;
+  projectile.idx += C.SHOT_SPEED; // points are 1px-per-step; skip ahead for speed
+  if (projectile.idx < projectile.points.length - 1) {
+    const p = projectile.points[Math.min(projectile.idx, projectile.points.length - 1)];
+    if ((projectile.lastX - C.R < 0.5 && p.x - C.R < 0.5) === false) { /* noop */ }
+    // wall tick: x pinned to an edge
+    if (p.x <= C.R + 0.01 || p.x >= C.BOARD_W - C.R - 0.01) {
+      if (!projectile._ticked || projectile._ticked !== Math.round(p.x)) { blip(200, 0.03, 'square', 0.04); projectile._ticked = Math.round(p.x); }
     }
-  }
-}
-
-function snapBubble() {
-  const pos = nearestEmpty(current.x, current.y);
-  if (!pos) {
-    document.getElementById('message').textContent = 'lost that one! 🫧';
-    blip(160, 0.1, 'sine', 0.08);
-    spawnBubble();
+    projectile.lastX = p.x;
     return;
   }
-  const { r, c } = pos;
-  grid[r][c] = current.color;
-  const gained = popGroup(r, c);
-  if (gained > 0) blip(500 + Math.min(gained, 400), 0.14, 'triangle', 0.16);
+  // land it — engine recomputes identically and records the move
+  const { mx, my } = projectile;
+  projectile = null;
+  const ev = game.shoot(mx, my); // records move into game.moves
+  if (ev.lost) { document.getElementById('message').textContent = 'lost that one! 🫧'; blip(160, 0.1, 'sine', 0.08); }
+  else if (ev.gained > 0) blip(500 + Math.min(ev.gained, 400), 0.14, 'triangle', 0.16);
   else blip(240, 0.04, 'sine', 0.06);
-  score += gained;
   updateHUD();
-  if (checkWin())  { endGame(true);  return; }
-  if (checkLose()) { endGame(false); return; }
-  if (shots % DROP_EVERY === 0) {
-    dropping = true;
-    current = null;
-    setTimeout(() => {
-      dropGrid();
-      dropping = false;
-      if (checkLose()) { endGame(false); return; }
-      spawnBubble();
-    }, 300);
-    return;
-  }
-  spawnBubble();
+
+  if (ev.win)  { endGame(true);  return; }
+  if (ev.lose) { endGame(false); return; }
+  if (ev.dropped) { dropping = true; setTimeout(() => { dropping = false; }, 120); }
 }
 
-function endGame(win) {
-  gameOver = true;
-  if (win) { blip(523, 0.12); setTimeout(() => blip(659, 0.12), 120); setTimeout(() => blip(784, 0.2), 240); }
-  else blip(130, 0.4, 'sine', 0.1);
-  document.getElementById('overlay-title').textContent = win ? '🎉 YOU WIN!' : '💀 GAME OVER';
-  document.getElementById('overlay-sub').textContent   = `score: ${score}`;
-  document.getElementById('overlay').classList.add('show');
-}
+/* ---------- render ---------- */
+function loop() { stepProjectile(); draw(); animId = requestAnimationFrame(loop); }
 
 function draw() {
   ctx.clearRect(0, 0, 320, 480);
   const bg = ctx.createLinearGradient(0, 0, 0, 480);
-  bg.addColorStop(0, '#0d0d1a');
-  bg.addColorStop(1, '#13132b');
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, 320, 480);
+  bg.addColorStop(0, '#0d0d1a'); bg.addColorStop(1, '#13132b');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, 320, 480);
 
-  ctx.strokeStyle = 'rgba(255,107,203,0.15)';
-  ctx.lineWidth = 1;
-  ctx.setLineDash([4, 6]);
-  ctx.beginPath();
-  ctx.moveTo(0, SHOOTER_Y - R - 6);
-  ctx.lineTo(320, SHOOTER_Y - R - 6);
-  ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,107,203,0.15)'; ctx.lineWidth = 1;
+  ctx.setLineDash([4, 6]); ctx.beginPath();
+  ctx.moveTo(0, C.SHOOTER_Y - C.R - 6); ctx.lineTo(320, C.SHOOTER_Y - C.R - 6); ctx.stroke();
   ctx.setLineDash([]);
 
-  for (let r = 0; r < ROWS; r++) {
-    const cols = rowCols(r);
-    for (let c = 0; c < cols; c++) {
-      if (grid[r] && grid[r][c]) {
-        const { x, y } = colRow(c, r);
-        drawBubble(ctx, x, y, R, grid[r][c]);
+  if (game) {
+    for (let r = 0; r < C.ROWS; r++) {
+      const cols = game.rowCols(r);
+      for (let c = 0; c < cols; c++) {
+        if (game.grid[r] && game.grid[r][c] != null) {
+          const { x, y } = game.colRow(c, r);
+          drawBubble(ctx, x, y, C.R, colorHex(game.grid[r][c]));
+        }
       }
     }
+    if (!projectile && !game.over) drawTrajectory();
+    if (projectile) {
+      const p = projectile.points[Math.min(projectile.idx, projectile.points.length - 1)];
+      drawBubble(ctx, p.x, p.y, C.R, colorHex(projectile.color));
+    } else if (!game.over) {
+      drawBubble(ctx, C.SHOOTER_X, C.SHOOTER_Y, C.R, colorHex(game.current));
+    }
+    drawOnDeck();
   }
 
-  if (current && !current.moving) drawTrajectory();
-  if (current) drawBubble(ctx, current.x, current.y, R, current.color);
+  ctx.strokeStyle = 'rgba(255,107,203,0.3)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(160, C.SHOOTER_Y, 28, Math.PI, 0); ctx.stroke();
+}
 
-  ctx.strokeStyle = 'rgba(255,107,203,0.3)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(160, SHOOTER_Y, 28, Math.PI, 0);
-  ctx.stroke();
+function drawOnDeck() {
+  if (game.over) return;
+  const x = C.SHOOTER_X + 50, y = C.SHOOTER_Y + 2, r = C.R - 4;
+  ctx.font = '6px "Press Start 2P", monospace';
+  ctx.fillStyle = 'rgba(107,248,255,0.6)';
+  ctx.textAlign = 'center';
+  ctx.fillText('NEXT', x, y - r - 6);
+  ctx.strokeStyle = 'rgba(107,248,255,0.25)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(x, y, r + 4, 0, Math.PI * 2); ctx.stroke();
+  drawBubble(ctx, x, y, r, colorHex(game.next));
+}
+
+function drawTrajectory() {
+  const tr = game.trace(mouseX, mouseY);
+  if (!tr) return;
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  const pts = tr.points;
+  let drawn = 0;
+  for (let i = 0; i < pts.length && drawn < 34; i += 3) {
+    const s = 3 - drawn * 0.07; if (s <= 0) break;
+    ctx.beginPath(); ctx.arc(pts[i].x, pts[i].y, Math.max(s, 0.5), 0, Math.PI * 2); ctx.fill();
+    drawn++;
+  }
 }
 
 function drawBubble(context, x, y, r, color) {
   const glow = context.createRadialGradient(x, y, r * 0.1, x, y, r * 1.4);
-  glow.addColorStop(0, color + '55');
-  glow.addColorStop(1, 'transparent');
+  glow.addColorStop(0, color + '55'); glow.addColorStop(1, 'transparent');
   context.fillStyle = glow;
-  context.beginPath();
-  context.arc(x, y, r * 1.4, 0, Math.PI * 2);
-  context.fill();
+  context.beginPath(); context.arc(x, y, r * 1.4, 0, Math.PI * 2); context.fill();
 
   const grad = context.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.1, x, y, r);
-  grad.addColorStop(0, lighten(color, 60));
-  grad.addColorStop(0.6, color);
-  grad.addColorStop(1, darken(color, 40));
+  grad.addColorStop(0, lighten(color, 60)); grad.addColorStop(0.6, color); grad.addColorStop(1, darken(color, 40));
   context.fillStyle = grad;
-  context.beginPath();
-  context.arc(x, y, r - 1, 0, Math.PI * 2);
-  context.fill();
+  context.beginPath(); context.arc(x, y, r - 1, 0, Math.PI * 2); context.fill();
 
   context.fillStyle = 'rgba(255,255,255,0.35)';
-  context.beginPath();
-  context.ellipse(x - r * 0.25, y - r * 0.28, r * 0.3, r * 0.18, -0.5, 0, Math.PI * 2);
-  context.fill();
+  context.beginPath(); context.ellipse(x - r * 0.25, y - r * 0.28, r * 0.3, r * 0.18, -0.5, 0, Math.PI * 2); context.fill();
 
-  context.strokeStyle = 'rgba(255,255,255,0.15)';
-  context.lineWidth = 1;
-  context.beginPath();
-  context.arc(x, y, r - 1, 0, Math.PI * 2);
-  context.stroke();
-}
-
-function drawTrajectory() {
-  const dx = mouseX - current.x;
-  const dy = mouseY - current.y;
-  if (dy >= 0) return;
-  const len = Math.hypot(dx, dy);
-  let vx = (dx / len) * SHOT_SPEED;
-  let vy = (dy / len) * SHOT_SPEED;
-  let px = current.x, py = current.y;
-  ctx.fillStyle = 'rgba(255,255,255,0.4)';
-  for (let i = 0; i < 34; i++) {
-    px += vx * 3; py += vy * 3;
-    if (px - R < 0)   { px = R;       vx *= -1; }
-    if (px + R > 320) { px = 320 - R; vx *= -1; }
-    if (py < 0) break;
-    const s = 3 - i * 0.07;
-    if (s <= 0) break;
-    ctx.beginPath();
-    ctx.arc(px, py, Math.max(s, 0.5), 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
-
-function drawNext() {
-  nextCtx.clearRect(0, 0, 60, 60);
-  drawBubble(nextCtx, 30, 30, R - 2, nextColor);
+  context.strokeStyle = 'rgba(255,255,255,0.15)'; context.lineWidth = 1;
+  context.beginPath(); context.arc(x, y, r - 1, 0, Math.PI * 2); context.stroke();
 }
 
 function lighten(hex, amt) { return shiftColor(hex, amt); }
 function darken(hex, amt)  { return shiftColor(hex, -amt); }
-
 function shiftColor(hex, amt) {
-  const n = parseInt(hex.replace('#',''), 16);
-  let r = Math.min(255, Math.max(0, (n >> 16) + amt));
-  let g = Math.min(255, Math.max(0, ((n >> 8) & 0xff) + amt));
-  let b = Math.min(255, Math.max(0, (n & 0xff) + amt));
+  const n = parseInt(hex.replace('#', ''), 16);
+  const r = Math.min(255, Math.max(0, (n >> 16) + amt));
+  const g = Math.min(255, Math.max(0, ((n >> 8) & 0xff) + amt));
+  const b = Math.min(255, Math.max(0, (n & 0xff) + amt));
   return `rgb(${r},${g},${b})`;
 }
 
 function updateHUD() {
-  document.getElementById('score-display').textContent = score;
-  document.getElementById('shots-display').textContent = shots;
+  document.getElementById('score-display').textContent = game ? game.score : 0;
+  document.getElementById('shots-display').textContent = game ? game.shots : 0;
+}
+
+/* ---------- game over: initials + submission ---------- */
+const INI_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_';
+let iniSlots = [0, 0, 0], iniSel = 0, iniActive = false;
+
+function endGame(win) {
+  if (win) { blip(523, 0.12); setTimeout(() => blip(659, 0.12), 120); setTimeout(() => blip(784, 0.2), 240); }
+  else blip(130, 0.4, 'sine', 0.1);
+
+  document.getElementById('overlay-title').textContent = win ? '🎉 YOU WIN!' : '💀 GAME OVER';
+  document.getElementById('overlay-sub').textContent = 'SCORE  ' + game.score;
+  document.getElementById('overlay-board').classList.remove('show');
+
+  const canSubmit = session !== null && game.over;
+  if (canSubmit) {
+    iniSlots = [0, 0, 0]; iniSel = 0; iniActive = true;
+    renderInitials();
+    document.getElementById('initials-entry').classList.add('show');
+    document.getElementById('play-again').style.display = 'none';
+  } else {
+    iniActive = false;
+    document.getElementById('initials-entry').classList.remove('show');
+    document.getElementById('play-again').style.display = '';
+  }
+  document.getElementById('overlay').classList.add('show');
+}
+
+function wireInitials() {
+  document.getElementById('ini-submit').addEventListener('click', submitScore);
+}
+function renderInitials() {
+  const wrap = document.getElementById('ini-slots');
+  wrap.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'ini-slot' + (i === iniSel ? ' sel' : '');
+    const up = document.createElement('div'); up.className = 'ini-arrow'; up.textContent = '▲';
+    up.onclick = () => { iniSel = i; cycle(+1); };
+    const ch = document.createElement('div'); ch.className = 'ini-char'; ch.textContent = INI_CHARS[iniSlots[i]];
+    ch.onclick = () => { iniSel = i; renderInitials(); };
+    const dn = document.createElement('div'); dn.className = 'ini-arrow'; dn.textContent = '▼';
+    dn.onclick = () => { iniSel = i; cycle(-1); };
+    slot.appendChild(up); slot.appendChild(ch); slot.appendChild(dn);
+    wrap.appendChild(slot);
+  }
+}
+function cycle(d) {
+  iniSlots[iniSel] = (iniSlots[iniSel] + d + INI_CHARS.length) % INI_CHARS.length;
+  renderInitials();
+}
+function onKey(e) {
+  if (!iniActive) return;
+  if (e.key === 'ArrowLeft')  { iniSel = (iniSel + 2) % 3; renderInitials(); e.preventDefault(); }
+  else if (e.key === 'ArrowRight') { iniSel = (iniSel + 1) % 3; renderInitials(); e.preventDefault(); }
+  else if (e.key === 'ArrowUp')   { cycle(+1); e.preventDefault(); }
+  else if (e.key === 'ArrowDown') { cycle(-1); e.preventDefault(); }
+  else if (e.key === 'Enter')     { submitScore(); e.preventDefault(); }
+  else if (/^[a-zA-Z0-9]$/.test(e.key)) {
+    const idx = INI_CHARS.indexOf(e.key.toUpperCase());
+    if (idx >= 0) { iniSlots[iniSel] = idx; iniSel = Math.min(2, iniSel + 1); renderInitials(); }
+  }
+}
+
+async function submitScore() {
+  if (!iniActive || !session) return;
+  iniActive = false;
+  const initials = iniSlots.map((i) => INI_CHARS[i]).join('');
+  document.getElementById('ini-submit').textContent = 'SENDING…';
+  try {
+    const r = await fetch(API_BASE + '/api/score', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sid: session.sid, seed: session.seed, iat: session.iat, sig: session.sig,
+        moves: game.moves, initials,
+      }),
+    });
+    const data = await r.json();
+    document.getElementById('initials-entry').classList.remove('show');
+    document.getElementById('play-again').style.display = '';
+    document.getElementById('ini-submit').textContent = 'SUBMIT';
+    if (r.ok && data.accepted) {
+      showOverlayBoard(data.leaderboard, data.rank);
+      renderLeaderboard(data.leaderboard);
+      document.getElementById('overlay-sub').textContent =
+        data.rank ? `RANK #${data.rank}  ·  ${data.score}` : `SCORE  ${data.score}`;
+    } else {
+      document.getElementById('overlay-sub').textContent = 'not saved: ' + (data.error || 'error');
+    }
+  } catch (e) {
+    document.getElementById('initials-entry').classList.remove('show');
+    document.getElementById('play-again').style.display = '';
+    document.getElementById('ini-submit').textContent = 'SUBMIT';
+    document.getElementById('overlay-sub').textContent = 'not saved (offline)';
+  }
+}
+
+/* ---------- leaderboard ---------- */
+async function loadLeaderboard() {
+  try {
+    const r = await fetch(API_BASE + '/api/leaderboard');
+    if (!r.ok) return;
+    const data = await r.json();
+    renderLeaderboard(data.leaderboard);
+  } catch (e) { /* offline; leave the dots */ }
+}
+function renderLeaderboard(list) {
+  const el = document.getElementById('lb-list');
+  el.innerHTML = '';
+  if (!list || !list.length) { el.innerHTML = '<li class="lb-empty">no scores yet</li>'; return; }
+  list.slice(0, 8).forEach((e) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="lb-ini">${e.initials}</span><span>${e.score}</span>`;
+    el.appendChild(li);
+  });
+}
+function showOverlayBoard(list, myRank) {
+  const box = document.getElementById('overlay-board');
+  const ol = document.getElementById('overlay-board-list');
+  ol.innerHTML = '';
+  (list || []).slice(0, 10).forEach((e) => {
+    const li = document.createElement('li');
+    if (e.rank === myRank) li.className = 'me';
+    li.innerHTML = `<span>#${e.rank} <span class="ob-ini">${e.initials}</span></span><span>${e.score}</span>`;
+    ol.appendChild(li);
+  });
+  box.classList.add('show');
+}
+
+/* ---------- misc ---------- */
+function hideOverlay() {
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('initials-entry').classList.remove('show');
+  document.getElementById('overlay-board').classList.remove('show');
 }
 
 let _ac = null;
@@ -696,7 +691,7 @@ function toggleMute() {
   muted = !muted;
   document.getElementById('sfx-btn').textContent = muted ? '🔇 SFX' : '🔊 SFX';
 }
-function loop() { update(); draw(); animId = requestAnimationFrame(loop); }
+
 window.addEventListener('load', initGame);
 </script>
 </body>

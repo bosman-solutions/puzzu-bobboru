@@ -1,0 +1,15 @@
+# Binds to the statically-provisioned scores volume.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: puzzu-scores
+  namespace: arcade
+  labels:
+    app: puzzu-api
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: nfs-static
+  volumeName: puzzu-scores
+  resources:
+    requests:
+      storage: 1Gi

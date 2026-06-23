@@ -8,3 +8,7 @@ Thumbs.db
 
 # Docker
 .env
+
+# local test artifact (engine.js is copied next to server.js at runtime)
+server/engine.js
+node_modules/

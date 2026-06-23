@@ -1,55 +1,57 @@
 # 🫧 Puzzu-Bobboru
 
-A love letter to classic bubble shooters. Built for someone who deserves something made just for them.
+A bubble shooter with a server-verified arcade leaderboard.
 
 ## Play
 
-Open `index.html` in any modern browser. No install, no server, no nonsense.
-
-Or run it in Docker:
-
-```bash
-# Simple — just a port
-docker compose -f docker-compose.simple.yml up -d
-# Open http://localhost:8080
-
-# With Traefik reverse proxy + TLS
-docker compose up -d
-```
+The leaderboard is server-authoritative: each game is seeded and signed by the
+server, and scores come only from replayed moves. Opening `index.html` directly
+runs a solo game without the leaderboard.
 
 ## How to play
-- Move your mouse to aim
-- Click to shoot
-- Match 3+ bubbles of the same color to pop them
-- Orphaned bubbles (no longer connected to the top) fall for bonus points
-- Clear the board to win
+
+- Aim with the mouse, or drag on touch
+- Click or lift to shoot
+- Match 3+ like colors to pop; bubbles cut off from the top fall for bonus
+- Clear the board to win, then enter 3-letter initials
 
 ## Scoring
-- 3+ match: 10pts per bubble
-- Orphan drop: 20pts per bubble
 
-## Stack
-- Vanilla HTML5 Canvas + JavaScript
-- Zero dependencies
-- Single file
-- 662 lines
+- 3+ match: 10 per bubble
+- Orphan drop: 20 per bubble
 
-## Deployment
-- `docker-compose.simple.yml` — port 8080, no proxy, just works
-- `docker-compose.yml` — Traefik labels, TLS via Let's Encrypt, production deployment
-- GitHub Actions CI/CD to self-hosted runner
+## Anti-cheat
 
-## Roadmap
-- [ ] Sound effects
-- [ ] High score persistence
-- [ ] Mobile touch polish
-- [ ] Difficulty levels
-- [ ] Special bubbles (bomb, wildcard)
-- [ ] GitHub Actions → GitHub Pages CI/CD
+The game core (`engine.js`) is shared by the browser and the server. The server
+issues a seeded game and signs the seed; the client submits its moves, and the
+server replays them through the same engine to compute the score. The submitted
+score is advisory only.
+
+## Layout
+
+```
+engine.js                    shared deterministic core
+index.html                   render, input, networking, leaderboard
+server/server.js             leaderboard API
+test-engine.js               determinism + forged-score checks
+server/integration-test.js   HTTP round-trip checks
+k8s/                         deployment manifests
+ci/                          self-hosted runner + deploy
+```
+
+## API
+
+- `POST /api/session` -> `{ sid, seed, iat, sig }`
+- `POST /api/score` -> `{ sid, seed, iat, sig, moves[], initials }`
+- `GET /api/leaderboard`
+
+## Tests
+
+```
+node test-engine.js
+cd server && node integration-test.js
+```
 
 ## License
 
 MIT
-
-## Made with
-Claude (Weaver) + di$co + love

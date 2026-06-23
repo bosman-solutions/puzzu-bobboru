@@ -1,19 +1,15 @@
-name: Deploy to Melchior
+name: deploy
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: [self-hosted, puzzu]
     steps:
-      - name: Checkout latest code
-        uses: actions/checkout@v4
-      - name: Rebuild and restart container
-        run: |
-          cd ${{ github.workspace }}
-          docker compose down
-          docker compose up -d --build
-      - name: Show logs
-        run: |
-          sleep 3
-          docker compose logs --tail=20
+      - uses: actions/checkout@v4
+      - env:
+          KUBECONFIG: /home/runner/.kube/config
+        run: ansible-playbook ci/ansible/deploy-puzzu.yml
