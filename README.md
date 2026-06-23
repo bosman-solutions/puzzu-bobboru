@@ -52,6 +52,20 @@ node test-engine.js
 cd server && node integration-test.js
 ```
 
+## Deploy
+
+Pushing to `main` triggers a self-hosted runner that deploys to a Kubernetes
+namespace through a scoped service account. The runner, one-time bootstrap, and
+Ansible playbook live in `ci/`; copy `ci/deploy.env.example` to `ci/deploy.env`
+and fill it in.
+
+## Roadmap
+
+- Full arcade leaderboard: ranked 1st-20th with classic styling
+- Request / observability logging in the API
+- Difficulty levels
+- Special bubbles (bomb, wildcard)
+
 ## License
 
 MIT
