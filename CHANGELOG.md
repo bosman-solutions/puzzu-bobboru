@@ -25,6 +25,13 @@ follow Semantic Versioning.
   stash/swap (or press `H`).
 - Move stream is now typed (shots + holds) so player actions replay on the
   server — the foundation for future player-activated powers.
+- Save / resume a game in progress. A save stores only `{seed, moves}` server-side
+  under a random code (kept in localStorage); resume replays it to rebuild the
+  exact board and hands back a freshly-signed session. SAVE / RESUME buttons.
+- Hold moved to a themed power tile at the top-left (tap the tile or press `H`),
+  built as a generic slot for future powers. Less crowding at the cannon.
+- Aim spike: a direction indicator on the cannon arc that points where you aim
+  (alongside the dotted line for now).
 
 ### Planned
 - API request / observability logging

@@ -26,6 +26,8 @@ if (!SECRET) {
 
 const SCORES_FILE = path.join(DATA_DIR, 'scores.json');
 const USED_FILE = path.join(DATA_DIR, 'used-sids.json');
+const SAVES_FILE = path.join(DATA_DIR, 'saves.json');
+const SAVE_TTL_MS = parseInt(process.env.SAVE_TTL_MS || String(30 * 24 * 60 * 60 * 1000), 10);
 
 // atomic JSON persistence
 function readJSON(file, fallback) {
@@ -39,12 +41,17 @@ function writeJSONAtomic(file, obj) {
 }
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
-let board = readJSON(SCORES_FILE, []);          // [{initials, score, shots, won, ts}]
+let board = readJSON(SCORES_FILE, []);          // [{initials, score, combo, shots, won, ts}]
 let usedSids = new Map(Object.entries(readJSON(USED_FILE, {}))); // sid -> ts (one submit per game)
+let saves = readJSON(SAVES_FILE, {});           // uid -> { seed, moves, ts } (game in progress)
 
 function pruneUsed() {
   const cutoff = Date.now() - TOKEN_TTL_MS;
   for (const [sid, ts] of usedSids) if (ts < cutoff) usedSids.delete(sid);
+}
+function pruneSaves() {
+  const cutoff = Date.now() - SAVE_TTL_MS;
+  for (const uid of Object.keys(saves)) if ((saves[uid].ts || 0) < cutoff) delete saves[uid];
 }
 
 // stateless signed seed
@@ -196,6 +203,43 @@ async function handle(req, res) {
       leaderboard: publicBoard('score'),
       comboLeaderboard: publicBoard('combo'),
     });
+  }
+
+  // save a game in progress: store seed + moves under a random uid
+  if (req.method === 'POST' && url.pathname === '/api/save') {
+    if (rateLimited(ip, 2)) return send(res, 429, { error: 'slow down' });
+    let body;
+    try { body = JSON.parse(await readBody(req)); } catch (_) { return send(res, 400, { error: 'bad json' }); }
+    const { sid, seed, iat, sig, moves } = body || {};
+    if (typeof sid !== 'string' || typeof seed !== 'number' || typeof iat !== 'number' || typeof sig !== 'string') {
+      return send(res, 400, { error: 'missing fields' });
+    }
+    if (!timingSafeEq(sig, sign(sid, seed >>> 0, iat))) return send(res, 403, { error: 'bad signature' });
+    const age = Date.now() - iat;
+    if (age < 0 || age > TOKEN_TTL_MS) return send(res, 403, { error: 'token expired' });
+    if (!validMoves(moves)) return send(res, 400, { error: 'bad moves' });
+    if (Engine.replay(seed >>> 0, moves).over) return send(res, 422, { error: 'game already finished' });
+    pruneSaves();
+    const uid = crypto.randomBytes(9).toString('hex');
+    saves[uid] = { seed: seed >>> 0, moves, ts: Date.now() };
+    writeJSONAtomic(SAVES_FILE, saves);
+    return send(res, 200, { uid });
+  }
+
+  // resume: hand back the saved run + a freshly signed session for the same seed
+  if (req.method === 'POST' && url.pathname === '/api/resume') {
+    if (rateLimited(ip, 2)) return send(res, 429, { error: 'slow down' });
+    let body;
+    try { body = JSON.parse(await readBody(req)); } catch (_) { return send(res, 400, { error: 'bad json' }); }
+    const uid = body && typeof body.uid === 'string' ? body.uid : null;
+    if (!uid) return send(res, 400, { error: 'missing uid' });
+    pruneSaves();
+    const sv = saves[uid];
+    if (!sv) return send(res, 404, { error: 'no such save' });
+    const sid = crypto.randomBytes(12).toString('hex');
+    const seed = sv.seed >>> 0;
+    const newIat = Date.now();
+    return send(res, 200, { seed, moves: sv.moves, sid, iat: newIat, sig: sign(sid, seed, newIat) });
   }
 
   return send(res, 404, { error: 'not found' });
