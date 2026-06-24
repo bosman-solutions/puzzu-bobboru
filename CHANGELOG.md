@@ -37,7 +37,8 @@ follow Semantic Versioning.
   geometry change).
 
 - Save hygiene: a save is deleted when its game finishes, and resume is
-  single-use (consumed on load) — no checkpoint save-scumming.
+  single-use (consumed on load), and after a resume you must take a shot
+  before you can save again — no checkpoint save-scumming.
 
 ### Planned
 - API request / observability logging

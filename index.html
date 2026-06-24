@@ -163,6 +163,8 @@
     }
     .btn-secondary:hover { background: rgba(107,248,255,0.1); }
 
+    .btn.disabled { opacity: 0.4; }
+
     #message {
       font-family: 'Press Start 2P', monospace;
       font-size: 8px;
@@ -422,6 +424,7 @@ let fallers = [];          // cascading orphan bubbles
 let floaters = [];         // rising "+N" point numbers
 let comboFlash = null;     // big combo callout
 let dropShake = 0;         // impulse when a row drops
+let saveShotFloor = 0;     // can't save until shots exceed this (one shot past a resume)
 
 /* ---------- session + lifecycle ---------- */
 async function newSession() {
@@ -456,7 +459,7 @@ async function initGame() {
 
   hideOverlay();
   projectile = null; dropping = false;
-  particles = []; fallers = []; floaters = []; comboFlash = null; dropShake = 0;
+  particles = []; fallers = []; floaters = []; comboFlash = null; dropShake = 0; saveShotFloor = 0;
 
   const seed = await newSession();
   game = new PuzzuEngine(seed);
@@ -819,10 +822,13 @@ function updateSaveUI() {
   // resume only from a fresh game — no scumming a run in progress
   const fresh = !game || (game.moves.length === 0 && !game.over);
   document.getElementById('resume-btn').style.display = (has && fresh) ? '' : 'none';
+  const canSave = !!session && game && !game.over && game.shots > saveShotFloor;
+  document.getElementById('save-btn').classList.toggle('disabled', !canSave);
 }
 async function doSave() {
   if (!session) { setMsg('saving needs the server'); return; }
-  if (!game || game.over || !game.moves.length) { setMsg('nothing to save yet'); return; }
+  if (!game || game.over) { setMsg('nothing to save yet'); return; }
+  if (game.shots <= saveShotFloor) { setMsg('take a shot before saving'); return; }
   try {
     const r = await fetch(API_BASE + '/api/save', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -848,11 +854,12 @@ async function doResume() {
     game = new PuzzuEngine(data.seed);
     for (const m of data.moves) { if (game.over) break; if (m && m.hold) game.hold(); else game.shoot(m.mx, m.my); }
     try { localStorage.removeItem(SAVE_KEY); } catch (e) {}   // resume is single-use
+    saveShotFloor = game.shots;   // must take a shot before you can re-save this point
     projectile = null; dropping = false;
     particles = []; fallers = []; floaters = []; comboFlash = null; dropShake = 0;
     hideOverlay();
     updateHUD();
-    setMsg('resumed! aim and tap');
+    setMsg('resumed! take a shot');
   } catch (e) { setMsg('resume failed (offline)'); }
 }
 
