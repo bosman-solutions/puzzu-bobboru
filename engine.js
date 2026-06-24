@@ -121,24 +121,29 @@
     _popGroup(r, c) {
       const color = this.grid[r][c];
       const group = this._floodColor(r, c, color, new Set());
-      if (group.length < 3) return 0;
+      if (group.length < 3) return { score: 0, pops: [], drops: [] };
+      const pops = group.map(([gr, gc]) => {
+        const p = this.colRow(gc, gr);
+        return { x: p.x, y: p.y, color: COLORS[this.grid[gr][gc]] };
+      });
       group.forEach(([gr, gc]) => { this.grid[gr][gc] = null; });
       // orphan sweep: anything no longer anchored to row 0 falls
       const anchored = new Set();
       for (let c2 = 0; c2 < this.rowCols(0); c2++) {
         if (this.grid[0] && this.grid[0][c2] != null) this._floodConnected(0, c2, anchored);
       }
-      let orphans = 0;
+      const drops = [];
       for (let row = 0; row < ROWS; row++) {
         const cols = this.rowCols(row);
         for (let col = 0; col < cols; col++) {
           if (this.grid[row] && this.grid[row][col] != null && !anchored.has(row + ',' + col)) {
+            const p = this.colRow(col, row);
+            drops.push({ x: p.x, y: p.y, color: COLORS[this.grid[row][col]] });
             this.grid[row][col] = null;
-            orphans++;
           }
         }
       }
-      return group.length * 10 + orphans * 20;
+      return { score: group.length * 10 + drops.length * 20, pops, drops };
     }
 
     _dropGrid() {
@@ -212,7 +217,7 @@
         if (hit) { pos = this._nearestEmpty(x, y); break; }
       }
 
-      const ev = { color, gained: 0, popped: false, lost: false, dropped: false, win: false, lose: false, landed: null };
+      const ev = { color, gained: 0, popped: false, lost: false, dropped: false, win: false, lose: false, landed: null, pops: [], drops: [] };
 
       if (!pos) {                 // failed snap loses the bubble
         ev.lost = true;
@@ -223,9 +228,9 @@
       const { r, c } = pos;
       this.grid[r][c] = color;
       ev.landed = { r, c };
-      const gained = this._popGroup(r, c);
-      ev.gained = gained; ev.popped = gained > 0;
-      this.score += gained;
+      const res = this._popGroup(r, c);
+      ev.gained = res.score; ev.popped = res.score > 0; ev.pops = res.pops; ev.drops = res.drops;
+      this.score += res.score;
 
       if (this._checkWin()) { this.over = true; this.won = true; ev.win = true; return ev; }
       if (this._checkLose()) { this.over = true; ev.lose = true; return ev; }

@@ -5,8 +5,15 @@ follow Semantic Versioning.
 
 ## [Unreleased]
 
+### Added
+- Full arcade leaderboard: top-20 ranked rows (ordinal + gold/silver/bronze for
+  the top three), a RANKS button to view it any time, and a top-20 game-over
+  board.
+- Visual feedback: particle bursts when bubbles pop and falling-bubble cascades
+  when orphans drop. The engine now reports popped/dropped cells (position and
+  color) for rendering only.
+
 ### Planned
-- Full arcade leaderboard ranked 1st-20th with classic styling
 - API request / observability logging
 
 ### Fixed

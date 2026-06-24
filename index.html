@@ -264,6 +264,36 @@
       #aim-zone { display: flex; }
       canvas#game { cursor: default; }
     }
+
+    /* full leaderboard (top 20) + arcade rows */
+    #ranks-overlay {
+      display: none; position: absolute; inset: 0;
+      background: rgba(13,13,26,0.95); border-radius: 12px;
+      flex-direction: column; align-items: center; justify-content: flex-start;
+      gap: 10px; padding: 14px 10px; z-index: 11;
+    }
+    #ranks-overlay.show { display: flex; }
+    #ranks-title {
+      font-family: 'Press Start 2P', monospace; font-size: 12px; color: var(--accent3);
+      text-shadow: 0 0 12px rgba(255,230,107,0.6); margin-bottom: 2px;
+    }
+    #ranks-list { list-style: none; margin: 0; padding: 0 2px; width: 100%;
+      max-height: calc(100% - 64px); overflow-y: auto; }
+    #overlay-board ol { max-height: 280px; overflow-y: auto; }
+    #ranks-list li, #overlay-board li {
+      font-family: 'Press Start 2P', monospace; font-size: 9px;
+      display: flex; align-items: center; gap: 8px; padding: 4px 6px;
+      color: var(--text); border-radius: 4px;
+    }
+    #ranks-list li:nth-child(even), #overlay-board li:nth-child(even) { background: rgba(255,255,255,0.03); }
+    .rk { width: 44px; color: var(--accent2); }
+    .ini { flex: 1; color: var(--accent); letter-spacing: 1px; }
+    .sc { color: var(--accent3); }
+    .rank-1 .rk { color: #ffd700; text-shadow: 0 0 8px rgba(255,215,0,0.7); }
+    .rank-2 .rk { color: #d8d8e0; }
+    .rank-3 .rk { color: #cd7f32; }
+    li.me { background: rgba(255,230,107,0.10); text-shadow: 0 0 8px rgba(255,230,107,0.6); }
+    .lb-empty2 { font-family: 'Press Start 2P', monospace; font-size: 8px; color: rgba(240,238,255,0.4); padding: 14px; }
   </style>
 </head>
 <body>
@@ -286,6 +316,7 @@
     </div>
     <button class="btn btn-primary" onclick="initGame()">NEW</button>
     <button class="btn btn-secondary" id="sfx-btn" onclick="toggleMute()">🔊 SFX</button>
+    <button class="btn btn-secondary" id="ranks-btn" onclick="openRanks()">🏆 RANKS</button>
   </div>
 
   <div class="canvas-wrap">
@@ -306,6 +337,11 @@
       </div>
 
       <button class="btn btn-primary" style="width:160px" id="play-again" onclick="initGame()">PLAY AGAIN</button>
+    </div>
+    <div id="ranks-overlay">
+      <div id="ranks-title">HIGH SCORES</div>
+      <ol id="ranks-list"></ol>
+      <button class="btn btn-primary" style="width:160px" onclick="closeRanks()">CLOSE</button>
     </div>
   </div>
 </div>
@@ -331,6 +367,8 @@ let mouseX = 160, mouseY = 240;
 let animId = null;
 let muted = false;
 let dropping = false;
+let particles = [];        // pop bursts
+let fallers = [];          // cascading orphan bubbles
 
 /* ---------- session + lifecycle ---------- */
 async function newSession() {
@@ -364,6 +402,7 @@ async function initGame() {
 
   hideOverlay();
   projectile = null; dropping = false;
+  particles = []; fallers = [];
 
   const seed = await newSession();
   game = new PuzzuEngine(seed);
@@ -437,6 +476,7 @@ function stepProjectile() {
   if (ev.lost) { document.getElementById('message').textContent = 'lost that one! 🫧'; blip(160, 0.1, 'sine', 0.08); }
   else if (ev.gained > 0) blip(500 + Math.min(ev.gained, 400), 0.14, 'triangle', 0.16);
   else blip(240, 0.04, 'sine', 0.06);
+  spawnFX(ev);
   updateHUD();
 
   if (ev.win)  { endGame(true);  return; }
@@ -445,7 +485,7 @@ function stepProjectile() {
 }
 
 /* ---------- render ---------- */
-function loop() { stepProjectile(); draw(); animId = requestAnimationFrame(loop); }
+function loop() { stepProjectile(); updateFX(); draw(); animId = requestAnimationFrame(loop); }
 
 function draw() {
   ctx.clearRect(0, 0, 320, 480);
@@ -477,6 +517,8 @@ function draw() {
     }
     drawOnDeck();
   }
+
+  drawFX();
 
   ctx.strokeStyle = 'rgba(255,107,203,0.3)'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.arc(160, C.SHOOTER_Y, 28, Math.PI, 0); ctx.stroke();
@@ -657,21 +699,87 @@ function renderLeaderboard(list) {
 function showOverlayBoard(list, myRank) {
   const box = document.getElementById('overlay-board');
   const ol = document.getElementById('overlay-board-list');
-  ol.innerHTML = '';
-  (list || []).slice(0, 10).forEach((e) => {
-    const li = document.createElement('li');
-    if (e.rank === myRank) li.className = 'me';
-    li.innerHTML = `<span>#${e.rank} <span class="ob-ini">${e.initials}</span></span><span>${e.score}</span>`;
-    ol.appendChild(li);
-  });
+  ol.innerHTML = (list || []).slice(0, 20).map((e) => rankRow(e, myRank)).join('');
   box.classList.add('show');
 }
+
+/* ---------- juice: pops + cascades ---------- */
+function spawnFX(ev) {
+  (ev.pops  || []).forEach((p) => spawnBurst(p.x, p.y, p.color));
+  (ev.drops || []).forEach((d) => fallers.push({
+    x: d.x, y: d.y, vx: (Math.random() - 0.5) * 1.6, vy: Math.random() * 0.8,
+    r: C.R, color: d.color, alpha: 1,
+  }));
+}
+function spawnBurst(x, y, color) {
+  const n = 10;
+  for (let i = 0; i < n; i++) {
+    const a = (Math.PI * 2 * i) / n + Math.random() * 0.5;
+    const sp = 1.4 + Math.random() * 2.6;
+    particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 0.6,
+      life: 0, max: 16 + Math.random() * 14, size: 1.8 + Math.random() * 2.4, color });
+  }
+  particles.push({ ring: true, x, y, life: 0, max: 14, color });
+}
+function updateFX() {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i]; p.life++;
+    if (!p.ring) { p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.vx *= 0.98; }
+    if (p.life >= p.max) particles.splice(i, 1);
+  }
+  for (let i = fallers.length - 1; i >= 0; i--) {
+    const f = fallers[i];
+    f.vy += 0.45; f.x += f.vx; f.y += f.vy; f.alpha -= 0.014;
+    if (f.y - f.r > 480 || f.alpha <= 0) fallers.splice(i, 1);
+  }
+}
+function drawFX() {
+  for (const f of fallers) {
+    ctx.save(); ctx.globalAlpha = Math.max(0, f.alpha);
+    drawBubble(ctx, f.x, f.y, f.r, f.color); ctx.restore();
+  }
+  for (const p of particles) {
+    const t = p.life / p.max;
+    ctx.save();
+    if (p.ring) {
+      ctx.globalAlpha = (1 - t) * 0.7; ctx.strokeStyle = p.color; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(p.x, p.y, C.R * (0.4 + t * 1.3), 0, Math.PI * 2); ctx.stroke();
+    } else {
+      ctx.globalAlpha = Math.max(0, 1 - t); ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.5, p.size * (1 - t * 0.5)), 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
+/* ---------- full leaderboard (top 20) ---------- */
+function ord(n) { const s = ['TH','ST','ND','RD'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+function rankRow(e, myRank) {
+  const cls = ['lb-row'];
+  if (e.rank === myRank) cls.push('me');
+  if (e.rank <= 3) cls.push('rank-' + e.rank);
+  return `<li class="${cls.join(' ')}"><span class="rk">${ord(e.rank)}</span>` +
+         `<span class="ini">${e.initials}</span><span class="sc">${e.score}</span></li>`;
+}
+async function openRanks() {
+  const ol = document.getElementById('ranks-list');
+  ol.innerHTML = '<li class="lb-empty2">loading…</li>';
+  document.getElementById('ranks-overlay').classList.add('show');
+  try {
+    const r = await fetch(API_BASE + '/api/leaderboard');
+    const data = await r.json();
+    const list = (data.leaderboard || []).slice(0, 20);
+    ol.innerHTML = list.length ? list.map((e) => rankRow(e, null)).join('') : '<li class="lb-empty2">no scores yet</li>';
+  } catch (e) { ol.innerHTML = '<li class="lb-empty2">offline</li>'; }
+}
+function closeRanks() { document.getElementById('ranks-overlay').classList.remove('show'); }
 
 /* ---------- misc ---------- */
 function hideOverlay() {
   document.getElementById('overlay').classList.remove('show');
   document.getElementById('initials-entry').classList.remove('show');
   document.getElementById('overlay-board').classList.remove('show');
+  document.getElementById('ranks-overlay').classList.remove('show');
 }
 
 let _ac = null;
