@@ -718,6 +718,8 @@ const INI_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_';
 let iniSlots = [0, 0, 0], iniSel = 0, iniActive = false;
 
 function endGame(win) {
+  try { localStorage.removeItem(SAVE_KEY); } catch (e) {}   // a finished run's save is spent
+  updateSaveUI();
   if (win) { blip(523, 0.12); setTimeout(() => blip(659, 0.12), 120); setTimeout(() => blip(784, 0.2), 240); }
   else blip(130, 0.4, 'sine', 0.1);
 
@@ -845,6 +847,7 @@ async function doResume() {
     session = { sid: data.sid, seed: data.seed, iat: data.iat, sig: data.sig };
     game = new PuzzuEngine(data.seed);
     for (const m of data.moves) { if (game.over) break; if (m && m.hold) game.hold(); else game.shoot(m.mx, m.my); }
+    try { localStorage.removeItem(SAVE_KEY); } catch (e) {}   // resume is single-use
     projectile = null; dropping = false;
     particles = []; fallers = []; floaters = []; comboFlash = null; dropShake = 0;
     hideOverlay();

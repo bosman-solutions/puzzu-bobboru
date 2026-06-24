@@ -238,8 +238,11 @@ async function handle(req, res) {
     if (!sv) return send(res, 404, { error: 'no such save' });
     const sid = crypto.randomBytes(12).toString('hex');
     const seed = sv.seed >>> 0;
+    const moves = sv.moves;
     const newIat = Date.now();
-    return send(res, 200, { seed, moves: sv.moves, sid, iat: newIat, sig: sign(sid, seed, newIat) });
+    delete saves[uid];                  // single-use: no checkpoint save-scumming
+    writeJSONAtomic(SAVES_FILE, saves);
+    return send(res, 200, { seed, moves, sid, iat: newIat, sig: sign(sid, seed, newIat) });
   }
 
   return send(res, 404, { error: 'not found' });

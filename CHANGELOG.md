@@ -36,6 +36,9 @@ follow Semantic Versioning.
 - UI: controls on the left rail, stats on the right — less crowding (no board
   geometry change).
 
+- Save hygiene: a save is deleted when its game finishes, and resume is
+  single-use (consumed on load) — no checkpoint save-scumming.
+
 ### Planned
 - API request / observability logging
 
