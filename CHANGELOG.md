@@ -21,7 +21,8 @@ follow Semantic Versioning.
 - Drop telegraph: the board shakes harder over the few shots before a row drops,
   with a top warning glow — no more surprise drops.
 - Hold (Tetris-style): stash the loaded bubble and swap it back later — one hold
-  per loaded bubble. Hold slot by the cannon, a HOLD button, and the `H` key.
+  per loaded bubble. The hold slot by the cannon is the control — tap it to
+  stash/swap (or press `H`).
 - Move stream is now typed (shots + holds) so player actions replay on the
   server — the foundation for future player-activated powers.
 
