@@ -108,9 +108,11 @@ function clientIp(req) {
   return (xff ? String(xff).split(',')[0].trim() : '') || req.socket.remoteAddress || 'unknown';
 }
 
-function publicBoard() {
-  return board.slice(0, MAX_BOARD).map((e, i) => ({
-    rank: i + 1, initials: e.initials, score: e.score, won: !!e.won, ts: e.ts,
+function publicBoard(sortKey) {
+  const key = sortKey === 'combo' ? 'combo' : 'score';
+  const sorted = board.slice().sort((a, b) => (b[key] || 0) - (a[key] || 0) || a.ts - b.ts);
+  return sorted.slice(0, MAX_BOARD).map((e, i) => ({
+    rank: i + 1, initials: e.initials, score: e.score, combo: e.combo || 0, won: !!e.won, ts: e.ts,
   }));
 }
 
@@ -124,7 +126,7 @@ async function handle(req, res) {
   }
 
   if (req.method === 'GET' && url.pathname === '/api/leaderboard') {
-    return send(res, 200, { leaderboard: publicBoard() });
+    return send(res, 200, { leaderboard: publicBoard(url.searchParams.get('board')) });
   }
 
   if (req.method === 'POST' && url.pathname === '/api/session') {
@@ -168,23 +170,29 @@ async function handle(req, res) {
     const entry = {
       initials: sanitizeInitials(initials),
       score: result.score,
+      combo: result.maxCombo || 0,
       shots: result.shots,
       won: result.won,
       ts: Date.now(),
     };
     board.push(entry);
     board.sort((a, b) => b.score - a.score || a.ts - b.ts); // higher score, earlier wins ties
-    board = board.slice(0, Math.max(MAX_BOARD, 500));        // keep a little history beyond the shown board
+    board = board.slice(0, Math.max(MAX_BOARD, 500));        // keep history beyond the shown board
     writeJSONAtomic(SCORES_FILE, board);
     writeJSONAtomic(USED_FILE, Object.fromEntries(usedSids));
 
     const rank = board.findIndex((e) => e === entry) + 1;
+    const comboRank = board.slice().sort((a, b) => (b.combo || 0) - (a.combo || 0) || a.ts - b.ts)
+      .findIndex((e) => e === entry) + 1;
     return send(res, 200, {
       accepted: true,
       score: result.score,
+      combo: result.maxCombo || 0,
       won: result.won,
       rank: rank <= MAX_BOARD ? rank : null,
-      leaderboard: publicBoard(),
+      comboRank: comboRank <= MAX_BOARD ? comboRank : null,
+      leaderboard: publicBoard('score'),
+      comboLeaderboard: publicBoard('combo'),
     });
   }
 

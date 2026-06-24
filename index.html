@@ -294,6 +294,20 @@
     .rank-3 .rk { color: #cd7f32; }
     li.me { background: rgba(255,230,107,0.10); text-shadow: 0 0 8px rgba(255,230,107,0.6); }
     .lb-empty2 { font-family: 'Press Start 2P', monospace; font-size: 8px; color: rgba(240,238,255,0.4); padding: 14px; }
+
+    /* combo box highlight */
+    #combo-box.hot { border-color: var(--accent2); box-shadow: 0 0 16px var(--glow2); }
+    #combo-box.hot .value { color: var(--accent2); text-shadow: 0 0 10px var(--accent2); }
+
+    /* leaderboard tabs */
+    #ranks-tabs { display: flex; gap: 8px; margin-bottom: 2px; }
+    .rtab {
+      font-family: 'Press Start 2P', monospace; font-size: 7px; padding: 6px 10px;
+      border-radius: 6px; cursor: pointer; letter-spacing: 1px;
+      background: var(--panel); color: rgba(240,238,255,0.5);
+      border: 1px solid rgba(107,248,255,0.2);
+    }
+    .rtab.active { color: var(--accent3); border-color: var(--accent3); box-shadow: 0 0 10px rgba(255,230,107,0.3); }
   </style>
 </head>
 <body>
@@ -309,6 +323,10 @@
     <div class="panel-box">
       <div class="label">SHOTS</div>
       <div class="value" id="shots-display">0</div>
+    </div>
+    <div class="panel-box" id="combo-box">
+      <div class="label">COMBO</div>
+      <div class="value" id="combo-display">—</div>
     </div>
     <div class="panel-box">
       <div class="label">HIGH SCORES</div>
@@ -340,6 +358,10 @@
     </div>
     <div id="ranks-overlay">
       <div id="ranks-title">HIGH SCORES</div>
+      <div id="ranks-tabs">
+        <button class="rtab active" id="rtab-score" onclick="openRanks('score')">SCORE</button>
+        <button class="rtab" id="rtab-combo" onclick="openRanks('combo')">COMBO</button>
+      </div>
       <ol id="ranks-list"></ol>
       <button class="btn btn-primary" style="width:160px" onclick="closeRanks()">CLOSE</button>
     </div>
@@ -369,6 +391,9 @@ let muted = false;
 let dropping = false;
 let particles = [];        // pop bursts
 let fallers = [];          // cascading orphan bubbles
+let floaters = [];         // rising "+N" point numbers
+let comboFlash = null;     // big combo callout
+let dropShake = 0;         // impulse when a row drops
 
 /* ---------- session + lifecycle ---------- */
 async function newSession() {
@@ -402,7 +427,7 @@ async function initGame() {
 
   hideOverlay();
   projectile = null; dropping = false;
-  particles = []; fallers = [];
+  particles = []; fallers = []; floaters = []; comboFlash = null; dropShake = 0;
 
   const seed = await newSession();
   game = new PuzzuEngine(seed);
@@ -493,6 +518,19 @@ function draw() {
   bg.addColorStop(0, '#0d0d1a'); bg.addColorStop(1, '#13132b');
   ctx.fillStyle = bg; ctx.fillRect(0, 0, 320, 480);
 
+  // drop telegraph: the board shakes harder as the next row nears
+  let tension = 0;
+  if (game && !game.over) {
+    const untilDrop = C.DROP_EVERY - (game.shots % C.DROP_EVERY);
+    if (untilDrop <= 3) tension = (4 - untilDrop) / 3;
+  }
+  const amp = tension * 2.2 + dropShake;
+  const jx = amp ? (Math.random() - 0.5) * 2 * amp : 0;
+  const jy = amp ? (Math.random() - 0.5) * 2 * amp : 0;
+
+  ctx.save();
+  ctx.translate(jx, jy);
+
   ctx.strokeStyle = 'rgba(255,107,203,0.15)'; ctx.lineWidth = 1;
   ctx.setLineDash([4, 6]); ctx.beginPath();
   ctx.moveTo(0, C.SHOOTER_Y - C.R - 6); ctx.lineTo(320, C.SHOOTER_Y - C.R - 6); ctx.stroke();
@@ -522,6 +560,15 @@ function draw() {
 
   ctx.strokeStyle = 'rgba(255,107,203,0.3)'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.arc(160, C.SHOOTER_Y, 28, Math.PI, 0); ctx.stroke();
+
+  ctx.restore();
+
+  if (tension > 0) {
+    const g = ctx.createLinearGradient(0, 0, 0, 44);
+    g.addColorStop(0, `rgba(255,70,70,${0.4 * tension})`);
+    g.addColorStop(1, 'transparent');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, 320, 44);
+  }
 }
 
 function drawOnDeck() {
@@ -580,6 +627,9 @@ function shiftColor(hex, amt) {
 function updateHUD() {
   document.getElementById('score-display').textContent = game ? game.score : 0;
   document.getElementById('shots-display').textContent = game ? game.shots : 0;
+  const c = game && game.combo > 1 ? game.combo : 0;
+  document.getElementById('combo-display').textContent = c ? 'x' + c : '—';
+  document.getElementById('combo-box').classList.toggle('hot', c > 0);
 }
 
 /* ---------- game over: initials + submission ---------- */
@@ -699,17 +749,23 @@ function renderLeaderboard(list) {
 function showOverlayBoard(list, myRank) {
   const box = document.getElementById('overlay-board');
   const ol = document.getElementById('overlay-board-list');
-  ol.innerHTML = (list || []).slice(0, 20).map((e) => rankRow(e, myRank)).join('');
+  ol.innerHTML = (list || []).slice(0, 20).map((e) => rankRow(e, 'score', myRank)).join('');
   box.classList.add('show');
 }
 
 /* ---------- juice: pops + cascades ---------- */
 function spawnFX(ev) {
-  (ev.pops  || []).forEach((p) => spawnBurst(p.x, p.y, p.color));
-  (ev.drops || []).forEach((d) => fallers.push({
-    x: d.x, y: d.y, vx: (Math.random() - 0.5) * 1.6, vy: Math.random() * 0.8,
-    r: C.R, color: d.color, alpha: 1,
-  }));
+  const mult = ev.mult || 1;
+  (ev.pops  || []).forEach((p) => {
+    spawnBurst(p.x, p.y, p.color);
+    floaters.push({ x: p.x, y: p.y, life: 0, max: 42, val: 10 * mult, color: '#ffffff' });
+  });
+  (ev.drops || []).forEach((d) => {
+    fallers.push({ x: d.x, y: d.y, vx: (Math.random() - 0.5) * 1.6, vy: Math.random() * 0.8, r: C.R, color: d.color, alpha: 1 });
+    floaters.push({ x: d.x, y: d.y, life: 0, max: 50, val: 20 * mult, color: '#ffe66b' });
+  });
+  if (ev.combo > 1) comboFlash = { combo: ev.combo, life: 0, max: 38 };
+  if (ev.dropped) dropShake = 7;
 }
 function spawnBurst(x, y, color) {
   const n = 10;
@@ -732,6 +788,12 @@ function updateFX() {
     f.vy += 0.45; f.x += f.vx; f.y += f.vy; f.alpha -= 0.014;
     if (f.y - f.r > 480 || f.alpha <= 0) fallers.splice(i, 1);
   }
+  for (let i = floaters.length - 1; i >= 0; i--) {
+    const fl = floaters[i]; fl.life++; fl.y -= 0.6;
+    if (fl.life >= fl.max) floaters.splice(i, 1);
+  }
+  if (comboFlash) { comboFlash.life++; if (comboFlash.life >= comboFlash.max) comboFlash = null; }
+  if (dropShake > 0) dropShake = Math.max(0, dropShake - 0.5);
 }
 function drawFX() {
   for (const f of fallers) {
@@ -750,26 +812,53 @@ function drawFX() {
     }
     ctx.restore();
   }
+  // rising point numbers
+  ctx.textAlign = 'center';
+  for (const fl of floaters) {
+    const t = fl.life / fl.max;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, 1 - t);
+    ctx.font = '7px "Press Start 2P", monospace';
+    ctx.fillStyle = fl.color;
+    ctx.fillText('+' + fl.val, fl.x, fl.y);
+    ctx.restore();
+  }
+  // combo callout
+  if (comboFlash) {
+    const t = comboFlash.life / comboFlash.max;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, 1 - t);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#6bf8ff';
+    ctx.font = (12 + (1 - t) * 8) + 'px "Press Start 2P", monospace';
+    ctx.fillText('COMBO x' + comboFlash.combo, 160, 70);
+    ctx.restore();
+  }
 }
 
 /* ---------- full leaderboard (top 20) ---------- */
 function ord(n) { const s = ['TH','ST','ND','RD'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
-function rankRow(e, myRank) {
+function rankRow(e, type, myRank) {
   const cls = ['lb-row'];
-  if (e.rank === myRank) cls.push('me');
+  if (myRank && e.rank === myRank) cls.push('me');
   if (e.rank <= 3) cls.push('rank-' + e.rank);
+  const metric = type === 'combo' ? 'x' + (e.combo || 0) : e.score;
   return `<li class="${cls.join(' ')}"><span class="rk">${ord(e.rank)}</span>` +
-         `<span class="ini">${e.initials}</span><span class="sc">${e.score}</span></li>`;
+         `<span class="ini">${e.initials}</span><span class="sc">${metric}</span></li>`;
 }
-async function openRanks() {
+async function openRanks(type) {
+  type = type === 'combo' ? 'combo' : 'score';
+  document.getElementById('rtab-score').classList.toggle('active', type === 'score');
+  document.getElementById('rtab-combo').classList.toggle('active', type === 'combo');
+  document.getElementById('ranks-title').textContent = type === 'combo' ? 'BEST COMBOS' : 'HIGH SCORES';
   const ol = document.getElementById('ranks-list');
   ol.innerHTML = '<li class="lb-empty2">loading…</li>';
   document.getElementById('ranks-overlay').classList.add('show');
   try {
-    const r = await fetch(API_BASE + '/api/leaderboard');
+    const r = await fetch(API_BASE + '/api/leaderboard' + (type === 'combo' ? '?board=combo' : ''));
     const data = await r.json();
     const list = (data.leaderboard || []).slice(0, 20);
-    ol.innerHTML = list.length ? list.map((e) => rankRow(e, null)).join('') : '<li class="lb-empty2">no scores yet</li>';
+    ol.innerHTML = list.length ? list.map((e) => rankRow(e, type, null)).join('') : '<li class="lb-empty2">no scores yet</li>';
   } catch (e) { ol.innerHTML = '<li class="lb-empty2">offline</li>'; }
 }
 function closeRanks() { document.getElementById('ranks-overlay').classList.remove('show'); }

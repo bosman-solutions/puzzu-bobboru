@@ -40,6 +40,8 @@
       this.rowOffset = 0;
       this.score = 0;
       this.shots = 0;
+      this.combo = 0;           // consecutive scoring shots
+      this.maxCombo = 0;
       this.over = false;
       this.won = false;
       this.grid = [];
@@ -217,10 +219,11 @@
         if (hit) { pos = this._nearestEmpty(x, y); break; }
       }
 
-      const ev = { color, gained: 0, popped: false, lost: false, dropped: false, win: false, lose: false, landed: null, pops: [], drops: [] };
+      const ev = { color, gained: 0, base: 0, mult: 1, combo: this.combo, popped: false, lost: false, dropped: false, win: false, lose: false, landed: null, pops: [], drops: [] };
 
-      if (!pos) {                 // failed snap loses the bubble
+      if (!pos) {                 // failed snap loses the bubble; breaks the chain
         ev.lost = true;
+        this.combo = 0; ev.combo = 0;
         this._advance();
         return ev;
       }
@@ -229,8 +232,14 @@
       this.grid[r][c] = color;
       ev.landed = { r, c };
       const res = this._popGroup(r, c);
-      ev.gained = res.score; ev.popped = res.score > 0; ev.pops = res.pops; ev.drops = res.drops;
-      this.score += res.score;
+      // combo: a scoring shot extends the chain; a dud breaks it. multiplier = chain length.
+      if (res.score > 0) { this.combo++; if (this.combo > this.maxCombo) this.maxCombo = this.combo; }
+      else this.combo = 0;
+      const mult = this.combo > 0 ? this.combo : 1;
+      const award = res.score * mult;
+      ev.gained = award; ev.base = res.score; ev.mult = mult; ev.combo = this.combo;
+      ev.popped = res.score > 0; ev.pops = res.pops; ev.drops = res.drops;
+      this.score += award;
 
       if (this._checkWin()) { this.over = true; this.won = true; ev.win = true; return ev; }
       if (this._checkLose()) { this.over = true; ev.lose = true; return ev; }
@@ -249,7 +258,7 @@
         if (e.over) break;
         e.shoot(m.mx, m.my, false);
       }
-      return { score: e.score, shots: e.shots, won: e.won, over: e.over, moves: moves.length };
+      return { score: e.score, maxCombo: e.maxCombo, shots: e.shots, won: e.won, over: e.over, moves: moves.length };
     }
 
     static colorHex(i) { return COLORS[i]; }

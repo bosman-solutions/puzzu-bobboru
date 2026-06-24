@@ -12,6 +12,14 @@ follow Semantic Versioning.
 - Visual feedback: particle bursts when bubbles pop and falling-bubble cascades
   when orphans drop. The engine now reports popped/dropped cells (position and
   color) for rendering only.
+- Combo system: consecutive scoring shots build a chain whose length is the score
+  multiplier (computed in the engine, so it stays replay-verified). A COMBO
+  readout, a combo callout on big chains, and rising "+N" point numbers at each
+  pop/drop.
+- A second leaderboard ranked by best combo (`/api/leaderboard?board=combo`), with
+  a SCORE / COMBO toggle in the RANKS view.
+- Drop telegraph: the board shakes harder over the few shots before a row drops,
+  with a top warning glow — no more surprise drops.
 
 ### Planned
 - API request / observability logging
