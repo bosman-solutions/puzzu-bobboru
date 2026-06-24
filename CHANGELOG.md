@@ -33,6 +33,9 @@ follow Semantic Versioning.
 - Aim spike: a direction indicator on the cannon arc that points where you aim
   (alongside the dotted line for now).
 
+- UI: controls on the left rail, stats on the right — less crowding (no board
+  geometry change).
+
 ### Planned
 - API request / observability logging
 

@@ -78,11 +78,12 @@
     }
 
     .side-panel {
-      width: 104px;
+      width: 100px;
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
+    .side-panel.right { justify-content: flex-start; }
 
     .panel-box {
       background: var(--panel);
@@ -130,7 +131,7 @@
         0 0 60px rgba(255,107,203,0.1),
         inset 0 0 30px rgba(0,0,0,0.5);
       cursor: crosshair;
-      max-width: calc(100vw - 140px);
+      max-width: calc(100vw - 236px);
       max-height: calc(100vh - 160px);
       width: auto;
       height: auto;
@@ -265,6 +266,16 @@
       canvas#game { cursor: default; }
     }
 
+    /* narrow screens: slimmer rails so the board keeps room */
+    @media (max-width: 600px) {
+      .game-wrap { gap: 8px; }
+      .side-panel { width: 74px; }
+      canvas#game { max-width: calc(100vw - 172px); }
+      .btn { font-size: 6px; padding: 7px 4px; }
+      .panel-box .value { font-size: 10px; }
+      .panel-box { padding: 6px; }
+    }
+
     /* full leaderboard (top 20) + arcade rows */
     #ranks-overlay {
       display: none; position: absolute; inset: 0;
@@ -323,26 +334,10 @@
 <h1>🫧 PUZZU-BOBBORU</h1>
 
 <div class="game-wrap">
-  <div class="side-panel">
+  <div class="side-panel left">
     <div class="panel-box power-tile" id="hold-tile" onclick="doHold()" title="Hold (H)">
       <div class="label">HOLD</div>
       <canvas id="hold-canvas" width="44" height="44"></canvas>
-    </div>
-    <div class="panel-box">
-      <div class="label">SCORE</div>
-      <div class="value" id="score-display">0</div>
-    </div>
-    <div class="panel-box">
-      <div class="label">SHOTS</div>
-      <div class="value" id="shots-display">0</div>
-    </div>
-    <div class="panel-box" id="combo-box">
-      <div class="label">COMBO</div>
-      <div class="value" id="combo-display">—</div>
-    </div>
-    <div class="panel-box">
-      <div class="label">HIGH SCORES</div>
-      <ul class="lb-list" id="lb-list"><li class="lb-empty">…</li></ul>
     </div>
     <button class="btn btn-primary" onclick="initGame()">NEW</button>
     <button class="btn btn-secondary" id="save-btn" onclick="doSave()">💾 SAVE</button>
@@ -378,6 +373,25 @@
       </div>
       <ol id="ranks-list"></ol>
       <button class="btn btn-primary" style="width:160px" onclick="closeRanks()">CLOSE</button>
+    </div>
+  </div>
+
+  <div class="side-panel right">
+    <div class="panel-box">
+      <div class="label">SCORE</div>
+      <div class="value" id="score-display">0</div>
+    </div>
+    <div class="panel-box">
+      <div class="label">SHOTS</div>
+      <div class="value" id="shots-display">0</div>
+    </div>
+    <div class="panel-box" id="combo-box">
+      <div class="label">COMBO</div>
+      <div class="value" id="combo-display">—</div>
+    </div>
+    <div class="panel-box">
+      <div class="label">HIGH SCORES</div>
+      <ul class="lb-list" id="lb-list"><li class="lb-empty">…</li></ul>
     </div>
   </div>
 </div>
