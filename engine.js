@@ -42,6 +42,8 @@
       this.shots = 0;
       this.combo = 0;           // consecutive scoring shots
       this.maxCombo = 0;
+      this.held = null;         // stashed color index (Tetris-style hold)
+      this.holdLock = false;    // one hold per loaded bubble
       this.over = false;
       this.won = false;
       this.grid = [];
@@ -164,6 +166,22 @@
 
     _advance() { this.current = this.next; this.next = this._color(); }
 
+    // Tetris-style hold: stash the loaded bubble, swap it back later.
+    // One hold per loaded bubble (cleared on the next shot). Recorded for replay.
+    hold(record = true) {
+      if (this.over || this.holdLock) return { rejected: true };
+      if (record) this.moves.push({ hold: true });
+      this.holdLock = true;
+      if (this.held === null) {       // first stash: pull the on-deck bubble in
+        this.held = this.current;
+        this.current = this.next;
+        this.next = this._color();
+      } else {                        // swap loaded <-> held
+        const t = this.current; this.current = this.held; this.held = t;
+      }
+      return { held: this.held, current: this.current };
+    }
+
     // flight path + resting point for (mx, my), without mutating state
     trace(mx, my) {
       const dx0 = mx - SHOOTER_X, dy0 = my - SHOOTER_Y;
@@ -201,6 +219,7 @@
       let x = SHOOTER_X, y = SHOOTER_Y;
       const color = this.current;
       this.shots++;
+      this.holdLock = false;    // firing frees the hold for the new loaded bubble
 
       let pos = null;
       for (let step = 0; step < FLIGHT_GUARD; step++) {
@@ -256,7 +275,8 @@
       const e = new Engine(seed);
       for (const m of moves) {
         if (e.over) break;
-        e.shoot(m.mx, m.my, false);
+        if (m && m.hold === true) e.hold(false);
+        else e.shoot(m.mx, m.my, false);
       }
       return { score: e.score, maxCombo: e.maxCombo, shots: e.shots, won: e.won, over: e.over, moves: moves.length };
     }

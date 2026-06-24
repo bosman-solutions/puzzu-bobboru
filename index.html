@@ -332,6 +332,7 @@
       <div class="label">HIGH SCORES</div>
       <ul class="lb-list" id="lb-list"><li class="lb-empty">…</li></ul>
     </div>
+    <button class="btn btn-secondary" id="hold-btn" onclick="doHold()">↩ HOLD (H)</button>
     <button class="btn btn-primary" onclick="initGame()">NEW</button>
     <button class="btn btn-secondary" id="sfx-btn" onclick="toggleMute()">🔊 SFX</button>
     <button class="btn btn-secondary" id="ranks-btn" onclick="openRanks()">🏆 RANKS</button>
@@ -554,6 +555,7 @@ function draw() {
       drawBubble(ctx, C.SHOOTER_X, C.SHOOTER_Y, C.R, colorHex(game.current));
     }
     drawOnDeck();
+    drawHold();
   }
 
   drawFX();
@@ -581,6 +583,29 @@ function drawOnDeck() {
   ctx.strokeStyle = 'rgba(107,248,255,0.25)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.arc(x, y, r + 4, 0, Math.PI * 2); ctx.stroke();
   drawBubble(ctx, x, y, r, colorHex(game.next));
+}
+
+function drawHold() {
+  if (game.over) return;
+  const x = C.SHOOTER_X - 50, y = C.SHOOTER_Y + 2, r = C.R - 4;
+  ctx.font = '6px "Press Start 2P", monospace';
+  ctx.fillStyle = game.holdLock ? 'rgba(255,107,203,0.3)' : 'rgba(255,107,203,0.6)';
+  ctx.textAlign = 'center';
+  ctx.fillText('HOLD', x, y - r - 6);
+  ctx.strokeStyle = 'rgba(255,107,203,0.25)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(x, y, r + 4, 0, Math.PI * 2); ctx.stroke();
+  if (game.held !== null) {
+    ctx.save(); if (game.holdLock) ctx.globalAlpha = 0.5;
+    drawBubble(ctx, x, y, r, colorHex(game.held));
+    ctx.restore();
+  }
+}
+
+function doHold() {
+  if (!game || game.over || projectile || dropping || game.holdLock) return;
+  game.hold();
+  blip(420, 0.06, 'triangle', 0.08);
+  updateHUD();
 }
 
 function drawTrajectory() {
@@ -682,6 +707,7 @@ function cycle(d) {
   renderInitials();
 }
 function onKey(e) {
+  if (!iniActive && (e.key === 'h' || e.key === 'H')) { doHold(); return; }
   if (!iniActive) return;
   if (e.key === 'ArrowLeft')  { iniSel = (iniSel + 2) % 3; renderInitials(); e.preventDefault(); }
   else if (e.key === 'ArrowRight') { iniSel = (iniSel + 1) % 3; renderInitials(); e.preventDefault(); }

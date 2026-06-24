@@ -65,7 +65,9 @@ function validMoves(moves) {
   if (!Array.isArray(moves) || moves.length === 0 || moves.length > MAX_MOVES) return false;
   const { BOARD_W, BOARD_H } = Engine.CONST;
   for (const m of moves) {
-    if (!m || typeof m.mx !== 'number' || typeof m.my !== 'number') return false;
+    if (!m) return false;
+    if (m.hold === true) continue;     // a hold action (no coords)
+    if (typeof m.mx !== 'number' || typeof m.my !== 'number') return false;
     if (!Number.isFinite(m.mx) || !Number.isFinite(m.my)) return false;
     if (m.mx < -BOARD_W || m.mx > 2 * BOARD_W || m.my < -BOARD_H || m.my > 2 * BOARD_H) return false;
   }
